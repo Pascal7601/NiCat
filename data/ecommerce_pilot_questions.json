@@ -1,0 +1,282 @@
+{
+    "dataset": "ecommerce-pilot",
+    "classification": "independently_authored_practice",
+    "unit": {
+        "title": "E-Commerce",
+        "slug": "mmu-bbit-ecommerce",
+        "code": "BIT 2413",
+        "year": 4,
+        "semester": 1
+    },
+    "exam": {
+        "title": "NiCat E-Commerce Pilot — 20 Marks",
+        "duration_seconds": 1800,
+        "instructions": "Independent practice based on archived MMU course topics, not an official examination paper. Answer all 12 questions. MCQs earn 1 mark each; written answers are reviewed by staff."
+    },
+    "sources": [
+        {
+            "key": "outline",
+            "title": "BIT 2413 E-Commerce Course Outline Sept–Dec 2022",
+            "year": 2022,
+            "url": "https://drive.google.com/file/d/1vs-d6dTE4SE68kkYKip7FiqDR_IlKlfH/view",
+            "kind": "course_outline"
+        },
+        {
+            "key": "wk1",
+            "title": "WK1-BIT2413 Class Notes (R5).pdf",
+            "year": 2022,
+            "url": "https://drive.google.com/file/d/1aRIKgbT84CWI31qitKaraSLFrhzBH_q6/view",
+            "kind": "lecture_notes"
+        },
+        {
+            "key": "wk2",
+            "title": "WK2-BIT2413 E-Commerce Lecture Notes",
+            "year": 2022,
+            "url": "https://drive.google.com/file/d/1zlmY72NcZqfpqMKFxkfEw7xEig-IvXMX/view",
+            "kind": "lecture_notes"
+        },
+        {
+            "key": "wk4",
+            "title": "Wk04-BIT2413 E-Commerce Lecture Notes (R7)",
+            "year": 2022,
+            "url": "https://drive.google.com/file/d/1JfDuqZG3H9XeX8_hs8rYq17sCYIFlRfo/view",
+            "kind": "lecture_notes"
+        }
+    ],
+    "questions": [
+        {
+            "key": "ecommerce-definition",
+            "topic": "E-Commerce fundamentals",
+            "source": "wk1",
+            "section": "E-COMMERCE DEFINED",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "Which activity best illustrates e-commerce?",
+            "options": [
+                "A customer purchases goods through an online store",
+                "A lecturer gives an in-person lesson without digital systems",
+                "A shop counts stock only on paper",
+                "An employee attends an offline meeting"
+            ],
+            "correct_index": 0,
+            "explanation": "E-commerce includes electronically mediated transactions in products or services."
+        },
+        {
+            "key": "business-process",
+            "topic": "Business processes",
+            "source": "wk1",
+            "section": "eCommerce Business Processes & Information Systems",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "What is a business process in an organization?",
+            "options": [
+                "A single computer hardware component",
+                "A coordinated sequence of activities that accomplishes a business task",
+                "The name of a web hosting provider",
+                "An encryption key for payment processing"
+            ],
+            "correct_index": 1,
+            "explanation": "Business processes are coordinated activities, often across functions, that produce outcomes."
+        },
+        {
+            "key": "transaction-processing",
+            "topic": "Information systems",
+            "source": "wk1",
+            "section": "Online Transaction processing systems (TPS)",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "Which system primarily records routine sales orders and shipping transactions?",
+            "options": [
+                "Transaction processing system",
+                "Computer graphics renderer",
+                "Source code formatter",
+                "Network packet sniffer"
+            ],
+            "correct_index": 0,
+            "explanation": "TPS handles routine operational transactions such as order entry and shipping."
+        },
+        {
+            "key": "business-intelligence",
+            "topic": "Information systems",
+            "source": "wk1",
+            "section": "Business intelligence",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "What is a primary purpose of business intelligence tools?",
+            "options": [
+                "To replace customer service with manual paperwork",
+                "To analyze data to support decisions",
+                "To design only website color schemes",
+                "To block all external data"
+            ],
+            "correct_index": 1,
+            "explanation": "Business intelligence organizes and analyzes data to improve business decisions."
+        },
+        {
+            "key": "crm-purpose",
+            "topic": "Customer relationships",
+            "source": "outline",
+            "section": "E-Commerce business models / customer relationships",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "What is the main purpose of a CRM system in a retail business?",
+            "options": [
+                "To coordinate customer interactions and relationships",
+                "To compile a programming language",
+                "To configure a local network switch",
+                "To replace the accounting ledger with physical notes"
+            ],
+            "correct_index": 0,
+            "explanation": "CRM organizes customer information and interactions to support sales, service, and retention."
+        },
+        {
+            "key": "erp-integration",
+            "topic": "Enterprise systems",
+            "source": "wk2",
+            "section": "Abstract: Grupo Modelo: Competing on Processes",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "What is a key benefit of an ERP system to a growing company?",
+            "options": [
+                "It prevents every department from accessing shared records",
+                "It integrates information and processes across business functions",
+                "It only edits promotional images",
+                "It removes the need to define workflows"
+            ],
+            "correct_index": 1,
+            "explanation": "ERP integrates business functions and related data, supporting coordinated processes."
+        },
+        {
+            "key": "porter-rivalry",
+            "topic": "Competitive strategy",
+            "source": "wk2",
+            "section": "Porter’s competitive forces model",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "In Porter’s five-forces model, which force refers to competition among established firms in an industry?",
+            "options": [
+                "Bargaining power of buyers",
+                "Threat of new entrants",
+                "Rivalry among existing competitors",
+                "Bargaining power of suppliers"
+            ],
+            "correct_index": 2,
+            "explanation": "Industry rivalry assesses competition between existing firms."
+        },
+        {
+            "key": "culture-change",
+            "topic": "Organizational change",
+            "source": "wk2",
+            "section": "Organizational culture",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "Why should managers consider organizational culture when implementing new e-commerce systems?",
+            "options": [
+                "Culture influences adoption and resistance to new work practices",
+                "Culture determines the server clock speed",
+                "Culture replaces the need for process training",
+                "Culture guarantees every software rollout will succeed"
+            ],
+            "correct_index": 0,
+            "explanation": "Shared norms, expectations, and routines can either support or resist systems changes."
+        },
+        {
+            "key": "database-redundancy",
+            "topic": "Information management",
+            "source": "wk4",
+            "section": "Managing Data in a Traditional File Environment",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "What problem can arise when separate departments maintain inconsistent copies of customer records?",
+            "options": [
+                "Guaranteed perfect data synchronization",
+                "Data redundancy and conflicting values",
+                "Automatic restoration of deleted records",
+                "Elimination of all security risks"
+            ],
+            "correct_index": 1,
+            "explanation": "Duplicate independent files can cause redundancy and inconsistencies."
+        },
+        {
+            "key": "ecommerce-security",
+            "topic": "E-Commerce infrastructure",
+            "source": "outline",
+            "section": "eSecurity and ePayment systems",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "Which practice most directly protects online shoppers when submitting payment information?",
+            "options": [
+                "Using encrypted HTTPS connections",
+                "Displaying customers’ passwords on invoices",
+                "Sharing credentials among employees",
+                "Disabling all server access logs"
+            ],
+            "correct_index": 0,
+            "explanation": "HTTPS protects data in transit between the user and the service, though other security controls are also needed."
+        },
+        {
+            "key": "crm-sme-case",
+            "topic": "Customer relationships",
+            "source": "outline",
+            "section": "eMarketing / customer relations / strategy",
+            "kind": "written",
+            "marks": "5.00",
+            "prompt": "A Kenyan SME wants to launch an online store and strengthen customer retention. Discuss five ways customer information systems and a CRM could improve its operations or customer experience. (5 marks)",
+            "explanation": "Good answers link organized customer data to service, communication, loyalty, and business decisions, while respecting customer privacy.",
+            "rubric": [
+                {
+                    "description": "Describes keeping a consistent record of customer information or interactions.",
+                    "marks": "1.00"
+                },
+                {
+                    "description": "Describes improving customer service through case or enquiry history.",
+                    "marks": "1.00"
+                },
+                {
+                    "description": "Describes targeted, consent-aware communication or offers.",
+                    "marks": "1.00"
+                },
+                {
+                    "description": "Describes supporting repeat sales or customer retention.",
+                    "marks": "1.00"
+                },
+                {
+                    "description": "Describes using customer insights to improve products or decisions.",
+                    "marks": "1.00"
+                }
+            ]
+        },
+        {
+            "key": "systems-change-case",
+            "topic": "Organizational change",
+            "source": "wk2",
+            "section": "Two-way relationship between organizations and e-commerce MIS",
+            "kind": "written",
+            "marks": "5.00",
+            "prompt": "A college plans to replace manual registration and fee-tracking processes with a shared online system. Explain five organizational or operational considerations that management should address for a successful rollout. (5 marks)",
+            "explanation": "A successful transition considers people, organizational processes, data governance, secure access, and continuity alongside the technology.",
+            "rubric": [
+                {
+                    "description": "Identifies staff training and support needs.",
+                    "marks": "1.00"
+                },
+                {
+                    "description": "Identifies changes to existing procedures and departmental workflows.",
+                    "marks": "1.00"
+                },
+                {
+                    "description": "Discusses access permissions or protection of student information.",
+                    "marks": "1.00"
+                },
+                {
+                    "description": "Discusses managing resistance and communicating changes.",
+                    "marks": "1.00"
+                },
+                {
+                    "description": "Discusses data quality, migration, availability, or continuity.",
+                    "marks": "1.00"
+                }
+            ]
+        }
+    ]
+}

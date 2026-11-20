@@ -133,3 +133,64 @@ def test_pending_written_never_claims_final_percentage(users, sample_exam):
     assert result.data["status"]=="grading_pending"
     assert result.data["final_percentage"] is None
     assert result.data["ungraded_possible_marks"]=="5.00"
+
+
+@pytest.mark.django_db
+def test_student_attempt_metadata_and_history(
+    users,
+    sample_exam,
+):
+    exam, _, _, _ = sample_exam
+
+    student_client = APIClient()
+    student_client.force_authenticate(
+        user=users[0]
+    )
+
+    started = student_client.post(
+        f"/api/v1/exams/{exam.id}/attempts/",
+        format="json",
+    )
+
+    assert started.status_code == 201, started.data
+    assert started.data["exam_title"] == "Stacks pilot"
+
+    attempt_id = started.data["id"]
+
+    detail = student_client.get(
+        f"/api/v1/attempts/{attempt_id}/"
+    )
+
+    assert detail.status_code == 200
+    assert detail.data["exam_title"] == "Stacks pilot"
+
+    history = student_client.get(
+        "/api/v1/me/attempts/"
+    )
+
+    assert history.status_code == 200
+
+    item = history.data[0]
+
+    assert item["id"] == attempt_id
+    assert item["exam_title"] == "Stacks pilot"
+    assert item["status"] == "in_progress"
+    assert item["deadline_at"]
+    assert item["submitted_at"] is None
+
+    # A different student must not see this attempt.
+    other_client = APIClient()
+    other_client.force_authenticate(
+        user=users[1]
+    )
+
+    other_history = other_client.get(
+        "/api/v1/me/attempts/"
+    )
+
+    assert other_history.status_code == 200
+    assert other_history.data == []
+
+    assert other_client.get(
+        f"/api/v1/attempts/{attempt_id}/"
+    ).status_code == 404

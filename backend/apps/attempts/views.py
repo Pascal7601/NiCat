@@ -22,14 +22,17 @@ def safe_error(exc):
 
 
 def student_attempt(attempt_id, student):
-    return get_object_or_404(Attempt.objects.select_related("exam_version"), id=attempt_id, student=student)
+    return get_object_or_404(Attempt.objects.select_related("exam_version__template"), id=attempt_id, student=student)
 
 
 def attempt_payload(attempt):
     parts = AttemptQuestion.objects.filter(attempt=attempt).order_by("position")
     responses = {str(r.attempt_question_id): r for r in
         StudentResponse.objects.filter(attempt_question__attempt=attempt)}
-    return {"id": str(attempt.id), "status": attempt.state,
+    return {
+        "id": str(attempt.id),
+        "exam_title": attempt.exam_version.template.title,
+        "status": attempt.state,
         "started_at": attempt.started_at.isoformat(), "deadline_at": attempt.deadline_at.isoformat(),
         "submitted_at": attempt.submitted_at.isoformat() if attempt.submitted_at else None,
         "questions": [{"id": str(q.id), "position": q.position, **q.public_snapshot,
@@ -113,8 +116,29 @@ def result(request, attempt_id):
                   for i in items]})
 
 
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def history(request):
-    attempts = Attempt.objects.filter(student=request.user).order_by("-started_at")[:50]
-    return Response([{"id": str(a.id), "status": a.state, "started_at": a.started_at.isoformat()} for a in attempts])
+    attempts = (
+        Attempt.objects
+        .filter(student=request.user)
+        .select_related("exam_version__template")
+        .order_by("-started_at")[:50]
+    )
+
+    return Response([
+        {
+            "id": str(a.id),
+            "exam_title": a.exam_version.template.title,
+            "status": a.state,
+            "started_at": a.started_at.isoformat(),
+            "deadline_at": a.deadline_at.isoformat(),
+            "submitted_at": (
+                a.submitted_at.isoformat()
+                if a.submitted_at
+                else None
+            ),
+        }
+        for a in attempts
+    ])

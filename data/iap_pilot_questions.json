@@ -1,0 +1,286 @@
+{
+    "dataset": "iap-pilot",
+    "classification": "independently_authored_practice",
+    "unit": {
+        "title": "Internet Application Programming",
+        "slug": "mmu-bbit-iap",
+        "code": "BCS 2218",
+        "year": 2,
+        "semester": 1
+    },
+    "exam": {
+        "title": "NiCat IAP Pilot — 20 Marks",
+        "duration_seconds": 1800,
+        "instructions": "Independent practice based on archived MMU course topics, not an official examination paper. Answer all 12 questions. MCQs earn 1 mark each; written answers are reviewed by staff."
+    },
+    "sources": [
+        {
+            "key": "outline",
+            "title": "BCS 2218 Internet Application Programming Course Outline",
+            "year": null,
+            "url": "https://drive.google.com/file/d/1CZA03K4ZHGoqI_Pv2oGEOdyFIc4B0dsh/view",
+            "kind": "course_outline"
+        },
+        {
+            "key": "forms",
+            "title": "8. CH8 HTML FORMS.pdf",
+            "year": null,
+            "url": "https://drive.google.com/file/d/1n1EoQO7UYxSddEWIFOtvyUH-rdXgmxij/view",
+            "kind": "lecture_notes"
+        },
+        {
+            "key": "css",
+            "title": "9.1 CSS CH1 INTRODUCTION TO CSS.pdf",
+            "year": null,
+            "url": "https://drive.google.com/file/d/1jnBw3XgOL1zUrB827FWILH-2B6eW-RWT/view",
+            "kind": "lecture_notes"
+        },
+        {
+            "key": "js",
+            "title": "10.3 JS CH7 Java script Functions.pdf",
+            "year": null,
+            "url": "https://drive.google.com/file/d/1-Xvi3JFDonj4bd5bGAEIlpPncppRtAfZ/view",
+            "kind": "lecture_notes"
+        },
+        {
+            "key": "php",
+            "title": "11.1 PHP CH1 INTRODUCTION TO PHP.pdf",
+            "year": null,
+            "url": "https://drive.google.com/file/d/1aA38S8VosfXS8vpcnSZ4IF-M-N5WCixH/view",
+            "kind": "lecture_notes"
+        },
+        {
+            "key": "mysql",
+            "title": "12 PHP AND MYSQL.pdf",
+            "year": null,
+            "url": "https://drive.google.com/file/d/1dJEpFmnMq--MOVjGrvo34iURNsFvvKaw/view",
+            "kind": "lecture_notes"
+        }
+    ],
+    "questions": [
+        {
+            "key": "html-form-action",
+            "topic": "HTML forms",
+            "source": "forms",
+            "section": "Form Attributes",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "In an HTML form, which attribute identifies the URL that processes the submitted data?",
+            "options": ["action", "method", "target", "enctype"],
+            "correct_index": 0,
+            "explanation": "The form action attribute specifies the submission destination."
+        },
+        {
+            "key": "html-get-query",
+            "topic": "HTML forms",
+            "source": "forms",
+            "section": "GET method",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "What normally happens to form fields sent using the HTTP GET method?",
+            "options": [
+                "They are automatically encrypted",
+                "They are appended to the URL query string",
+                "They are stored only in browser memory",
+                "They are converted to CSS rules"
+            ],
+            "correct_index": 1,
+            "explanation": "GET form data is encoded in the URL query string; do not send secrets in it."
+        },
+        {
+            "key": "html-file-upload",
+            "topic": "HTML forms",
+            "source": "forms",
+            "section": "Form Attributes / enctype",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "Which form encoding is used when uploading files from an HTML form?",
+            "options": [
+                "text/plain",
+                "application/json",
+                "multipart/form-data",
+                "application/xml"
+            ],
+            "correct_index": 2,
+            "explanation": "Multipart form-data supports file uploads, unlike a normal URL-encoded form."
+        },
+        {
+            "key": "radio-same-group",
+            "topic": "HTML forms",
+            "source": "forms",
+            "section": "Radio Button Control",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "How do HTML radio buttons normally form a group where selecting one clears the others?",
+            "options": [
+                "Use the same name attribute",
+                "Assign the same id to every input",
+                "Use type=\"checkbox\"",
+                "Use different form elements"
+            ],
+            "correct_index": 0,
+            "explanation": "Radio inputs sharing a name in a form are treated as one choice group."
+        },
+        {
+            "key": "css-selector",
+            "topic": "CSS",
+            "source": "css",
+            "section": "CSS - Syntax",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "In the rule p { color: red; }, what does p represent?",
+            "options": [
+                "A CSS property",
+                "A CSS selector",
+                "A color value",
+                "A JavaScript variable"
+            ],
+            "correct_index": 1,
+            "explanation": "The selector identifies the elements targeted by the CSS declaration."
+        },
+        {
+            "key": "css-external",
+            "topic": "CSS",
+            "source": "css",
+            "section": "Css inclusion",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "What is a key benefit of linking an external CSS file from multiple HTML pages?",
+            "options": [
+                "It runs PHP on the browser",
+                "It disables HTML semantic structure",
+                "It allows consistent styling from one stylesheet",
+                "It removes the need for all HTML attributes"
+            ],
+            "correct_index": 2,
+            "explanation": "An external stylesheet centralizes presentation rules for reuse and easier maintenance."
+        },
+        {
+            "key": "js-function-definition",
+            "topic": "JavaScript functions",
+            "source": "js",
+            "section": "Defining and Calling a Function",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "Which JavaScript statement declares a named reusable function?",
+            "options": [
+                "function calculate() {}",
+                "function = calculate{}",
+                "call calculate function",
+                "new calculate = function"
+            ],
+            "correct_index": 0,
+            "explanation": "The function keyword followed by an identifier, parentheses, and a body declares a named function."
+        },
+        {
+            "key": "js-function-call",
+            "topic": "JavaScript functions",
+            "source": "js",
+            "section": "Defining and Calling a Function",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "After declaring function greet() {}, which expression invokes the function?",
+            "options": [
+                "function greet",
+                "greet()",
+                "greet = function",
+                "call function greet"
+            ],
+            "correct_index": 1,
+            "explanation": "A declared function is called by its name followed by parentheses."
+        },
+        {
+            "key": "php-server",
+            "topic": "PHP",
+            "source": "php",
+            "section": "Introduction / Client-server model",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "Where is PHP code normally executed in a PHP web application?",
+            "options": [
+                "Within a CSS stylesheet",
+                "On the web server",
+                "Only in the browser DOM",
+                "Inside the HTML validator"
+            ],
+            "correct_index": 1,
+            "explanation": "PHP is processed server-side before the resulting response is sent to the browser."
+        },
+        {
+            "key": "mysql-retrieve",
+            "topic": "PHP/MySQL",
+            "source": "mysql",
+            "section": "Talking to MySQL Databases with SQL",
+            "kind": "single_choice",
+            "marks": "1.00",
+            "prompt": "Which SQL statement is used to retrieve records from a MySQL table?",
+            "options": ["INSERT", "UPDATE", "SELECT", "DELETE"],
+            "correct_index": 2,
+            "explanation": "SELECT retrieves records that match the query criteria."
+        },
+        {
+            "key": "build-feedback-form",
+            "topic": "HTML forms",
+            "source": "forms",
+            "section": "Syntax / Form Attributes / Form Controls",
+            "kind": "written",
+            "marks": "5.00",
+            "prompt": "Describe the HTML elements and attributes needed for a feedback form that submits a learner email and a multi-line comment by POST to /feedback. Include how the fields and submit action are identified. (5 marks)",
+            "explanation": "A valid form includes an action, POST method, named email and textarea controls, plus a submission control and clear labels.",
+            "rubric": [
+                {
+                    "description": "Includes a form with action=\"/feedback\".",
+                    "marks": "1.00"
+                },
+                {
+                    "description": "Sets method=\"post\" on the form.",
+                    "marks": "1.00"
+                },
+                {
+                    "description": "Includes an email input with an appropriate name attribute.",
+                    "marks": "1.00"
+                },
+                {
+                    "description": "Includes a textarea with a name attribute for the comment.",
+                    "marks": "1.00"
+                },
+                {
+                    "description": "Includes a submit button and labels or clear field descriptions.",
+                    "marks": "1.00"
+                }
+            ]
+        },
+        {
+            "key": "web-stack-roles",
+            "topic": "Web application architecture",
+            "source": "outline",
+            "section": "Purpose / Course Content (HTML, CSS, JavaScript, PHP and MySQL)",
+            "kind": "written",
+            "marks": "5.00",
+            "prompt": "A student association wants a website where visitors can fill in a registration form and administrators can view stored records. Explain the distinct roles HTML, CSS, JavaScript, PHP, and MySQL would play. (5 marks)",
+            "explanation": "HTML structures the interface, CSS styles it, JavaScript enables client behaviour, PHP processes requests server-side, and MySQL stores data.",
+            "rubric": [
+                {
+                    "description": "Explains HTML structures the registration form and page content.",
+                    "marks": "1.00"
+                },
+                {
+                    "description": "Explains CSS controls the presentation or layout.",
+                    "marks": "1.00"
+                },
+                {
+                    "description": "Explains JavaScript supports client-side behaviour or validation.",
+                    "marks": "1.00"
+                },
+                {
+                    "description": "Explains PHP handles server-side processing of submitted data.",
+                    "marks": "1.00"
+                },
+                {
+                    "description": "Explains MySQL stores and retrieves registration records.",
+                    "marks": "1.00"
+                }
+            ]
+        }
+    ]
+}

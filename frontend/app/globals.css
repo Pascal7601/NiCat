@@ -639,3 +639,178 @@ textarea.field {
     background: #e1f8ea;
     color: #16633d;
 }
+
+/* NiCat v1.0 — Sprint 3 */
+
+/* Dashboard */
+
+.stat-accent {
+    width: 40px;
+    height: 5px;
+    margin-top: 13px;
+    border-radius: 8px;
+    background: var(--primary);
+}
+
+.text-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--primary);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.text-link:hover {
+    text-decoration: underline;
+}
+
+.unit-instructions {
+    margin-top: 12px !important;
+    line-height: 1.5;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+}
+
+.unit-card p svg {
+    vertical-align: middle;
+}
+
+/* Examination runner */
+
+.exam-question-card {
+    min-height: 430px;
+}
+
+.question-prompt {
+    font-size: clamp(1.2rem, 2.2vw, 1.65rem);
+    line-height: 1.45;
+    margin: 24px 0 30px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.answer-fieldset {
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+
+.qnav button.answered.current {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+/* Student attempt history */
+
+.activity-list {
+    display: grid;
+    gap: 14px;
+    margin-top: 20px;
+}
+
+.activity-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    min-width: 0;
+}
+
+.activity-row:hover {
+    border-color: var(--primary);
+}
+
+.activity-state {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+}
+
+/* Tablet and mobile improvements */
+
+@media (max-width: 760px) {
+    .sidebar nav {
+        display: flex;
+        flex: 1 1 100%;
+        gap: 6px;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 3px;
+    }
+
+    .sidebar .nav-link {
+        flex: 0 0 auto;
+    }
+
+    .main {
+        padding: 24px 16px 60px;
+    }
+
+    .exam-grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .exam-nav-card {
+        width: 100%;
+    }
+
+    .exam-question-card {
+        min-height: auto;
+    }
+
+    .exam-top {
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .activity-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .activity-state {
+        flex-wrap: wrap;
+    }
+
+    .question-actions {
+        flex-wrap: wrap;
+    }
+
+    .question-actions .button {
+        flex: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .card {
+        padding: 18px;
+    }
+
+    .stat {
+        padding: 14px;
+    }
+
+    .exam-layout {
+        padding: 16px 12px 48px;
+    }
+
+    .exam-top .brand {
+        font-size: 1.05rem;
+    }
+
+    .question-actions .button {
+        font-size: 0.82rem;
+        padding: 10px;
+    }
+
+    .qnav {
+        gap: 7px;
+    }
+}
