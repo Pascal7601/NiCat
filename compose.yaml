@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nicat}
+      POSTGRES_USER: ${POSTGRES_USER:-nicat}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nicat_dev_only}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nicat -d nicat"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  pgdata:

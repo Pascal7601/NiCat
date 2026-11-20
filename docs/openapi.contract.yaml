@@ -1,0 +1,771 @@
+# Hand-maintained provisional contract: NOT runtime generated.
+openapi: 3.0.3
+info:
+  title: NiCat Next.js contract (draft; not runtime-generated)
+  version: 0.3.0
+  description: Draft reviewable API contract. Verify against drf-spectacular output
+    once Django/PostgreSQL tests run.
+servers:
+- url: http://localhost:8000/api/v1
+tags:
+- name: Auth
+- name: Academics
+- name: Exams
+- name: Attempts
+- name: Review
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    UserProfile:
+      type: object
+      required:
+      - id
+      - email
+      - date_joined
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        date_joined:
+          type: string
+          format: date-time
+    TokenPair:
+      type: object
+      required:
+      - access
+      - refresh
+      - user
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserProfile'
+    TokenRefresh:
+      type: object
+      required:
+      - access
+      - refresh
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+    Programme:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        code:
+          type: string
+        university_name:
+          type: string
+    Curriculum:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        is_officially_verified:
+          type: boolean
+        reference_url:
+          type: string
+    UnitPlacement:
+      type: object
+      properties:
+        id:
+          type: string
+        unit_id:
+          type: string
+        unit_name:
+          type: string
+        displayed_code:
+          type: string
+        code_verification_status:
+          type: string
+        year_number:
+          type: integer
+        semester_number:
+          type: integer
+    Topic:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        parent_id:
+          type: string
+          nullable: true
+        title:
+          type: string
+        position:
+          type: integer
+    Exam:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        unit_id:
+          type: string
+          format: uuid
+        duration_seconds:
+          type: integer
+        instructions:
+          type: string
+    QuestionOption:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        text:
+          type: string
+    StudentAnswer:
+      type: object
+      properties:
+        selected_option_id:
+          type: string
+          nullable: true
+        text_answer:
+          type: string
+    AttemptQuestion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        position:
+          type: integer
+        kind:
+          type: string
+        prompt:
+          type: string
+        marks:
+          type: string
+        topic:
+          type: string
+        provenance:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionOption'
+        response:
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/StudentAnswer'
+    Attempt:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+        deadline_at:
+          type: string
+          format: date-time
+        submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttemptQuestion'
+    Submission:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        result_url:
+          type: string
+    Result:
+      type: object
+      properties:
+        attempt_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        scored_marks:
+          type: string
+        scored_possible_marks:
+          type: string
+        ungraded_possible_marks:
+          type: string
+        final_percentage:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              question_id:
+                type: string
+                format: uuid
+              status:
+                type: string
+              awarded:
+                type: string
+                nullable: true
+              possible:
+                type: string
+              explanation:
+                type: string
+                nullable: true
+              correct_answer:
+                type: string
+                nullable: true
+    HistoryItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        detail:
+          type: string
+security:
+- bearerAuth: []
+paths:
+  /auth/register/:
+    post:
+      tags:
+      - Auth
+      summary: Register student
+      operationId: register_student
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              required:
+              - email
+              - password
+  /auth/login/:
+    post:
+      tags:
+      - Auth
+      summary: Obtain JWT pair
+      operationId: obtain_jwt_pair
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              required:
+              - email
+              - password
+  /auth/refresh/:
+    post:
+      tags:
+      - Auth
+      summary: Rotate JWT refresh
+      operationId: rotate_jwt_refresh
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh:
+                  type: string
+              required:
+              - refresh
+  /auth/logout/:
+    post:
+      tags:
+      - Auth
+      summary: Revoke JWT refresh
+      operationId: revoke_jwt_refresh
+      responses:
+        '204':
+          description: No Content
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh:
+                  type: string
+              required:
+              - refresh
+  /me/:
+    get:
+      tags:
+      - Auth
+      summary: Get own profile
+      operationId: get_own_profile
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+  /programmes/:
+    get:
+      tags:
+      - Academics
+      summary: List programmes
+      operationId: list_programmes
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  next:
+                    type: string
+                    nullable: true
+                  previous:
+                    type: string
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Programme'
+      security: []
+  /programmes/{programme_id}/curricula/:
+    get:
+      tags:
+      - Academics
+      summary: List programme curricula
+      operationId: list_programme_curricula
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  next:
+                    type: string
+                    nullable: true
+                  previous:
+                    type: string
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Curriculum'
+      parameters:
+      - in: path
+        name: programme_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /curricula/{curriculum_id}/units/:
+    get:
+      tags:
+      - Academics
+      summary: List curriculum units
+      operationId: list_curriculum_units
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  next:
+                    type: string
+                    nullable: true
+                  previous:
+                    type: string
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UnitPlacement'
+      parameters:
+      - in: path
+        name: curriculum_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /units/{unit_id}/topics/:
+    get:
+      tags:
+      - Academics
+      summary: List unit topics
+      operationId: list_unit_topics
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  next:
+                    type: string
+                    nullable: true
+                  previous:
+                    type: string
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Topic'
+      parameters:
+      - in: path
+        name: unit_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /exams/:
+    get:
+      tags:
+      - Exams
+      summary: List exams
+      operationId: list_exams
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  next:
+                    type: string
+                    nullable: true
+                  previous:
+                    type: string
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Exam'
+      parameters:
+      - name: unit_id
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+  /exams/{exam_id}/:
+    get:
+      tags:
+      - Exams
+      summary: Get exam detail
+      operationId: get_exam_detail
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exam'
+      parameters:
+      - in: path
+        name: exam_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /exams/{exam_id}/attempts/:
+    post:
+      tags:
+      - Attempts
+      summary: Start exam attempt
+      operationId: start_exam_attempt
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+      parameters:
+      - in: path
+        name: exam_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /attempts/{attempt_id}/:
+    get:
+      tags:
+      - Attempts
+      summary: Get attempt
+      operationId: get_attempt
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+      parameters:
+      - in: path
+        name: attempt_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /attempts/{attempt_id}/responses/{question_id}/:
+    put:
+      tags:
+      - Attempts
+      summary: Save attempt answer
+      operationId: save_attempt_answer
+      responses:
+        '200':
+          description: Saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  saved_at:
+                    type: string
+                    format: date-time
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                selected_option_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                text_answer:
+                  type: string
+                  maxLength: 20000
+              anyOf:
+              - required:
+                - selected_option_id
+              - required:
+                - text_answer
+      parameters:
+      - in: path
+        name: attempt_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: question_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /attempts/{attempt_id}/submit/:
+    post:
+      tags:
+      - Attempts
+      summary: Submit exam attempt
+      operationId: submit_exam_attempt
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+      parameters:
+      - in: path
+        name: attempt_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /attempts/{attempt_id}/result/:
+    get:
+      tags:
+      - Attempts
+      summary: Get attempt result
+      operationId: get_attempt_result
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+      parameters:
+      - in: path
+        name: attempt_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /me/attempts/:
+    get:
+      tags:
+      - Attempts
+      summary: List own attempts
+      operationId: list_own_attempts
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HistoryItem'
+  /review/pending/:
+    get:
+      tags:
+      - Review
+      summary: List pending reviews
+      operationId: list_pending_reviews
+      responses:
+        '200':
+          description: Privileged reviewer payload (see docs/API_CONTRACT_V1.md)
+  /review/grade-items/{item_id}/mark/:
+    post:
+      tags:
+      - Review
+      summary: Grade written answer
+      operationId: grade_written_answer
+      responses:
+        '200':
+          description: Privileged reviewer payload (see docs/API_CONTRACT_V1.md)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marks_awarded:
+                  type: string
+                rationale:
+                  type: string
+              required:
+              - marks_awarded
+              - rationale
+      parameters:
+      - in: path
+        name: item_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /review/grade-items/{item_id}/correct/:
+    post:
+      tags:
+      - Review
+      summary: Correct final mark
+      operationId: correct_final_mark
+      responses:
+        '200':
+          description: Privileged reviewer payload (see docs/API_CONTRACT_V1.md)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                marks_awarded:
+                  type: string
+                reason:
+                  type: string
+              required:
+              - marks_awarded
+              - reason
+      parameters:
+      - in: path
+        name: item_id
+        required: true
+        schema:
+          type: string
+          format: uuid

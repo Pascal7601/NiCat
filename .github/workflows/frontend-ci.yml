@@ -1,0 +1,21 @@
+name: NiCat frontend checks
+on: [push, pull_request]
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      # Hard gate: maintainers must generate and commit a reviewed npm lockfile.
+      - run: test -f package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test:contract
+      - run: npm run build

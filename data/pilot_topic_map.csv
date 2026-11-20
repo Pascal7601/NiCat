@@ -1,0 +1,17 @@
+semester,historical_unit_code,unit_name,proposed_topic,evidence,confidence_status
+2.1,BIT 216,Data Structures and Algorithms,Basic definitions and structured data types,DSA course outline,outline_confirmed
+2.1,BIT 216,Data Structures and Algorithms,Arrays and lists as abstract data types,DSA course outline,outline_confirmed
+2.1,BIT 216,Data Structures and Algorithms,Stacks and queues,DSA course outline,outline_confirmed
+2.1,BIT 216,Data Structures and Algorithms,"Trees, BSTs and heaps",DSA course outline,outline_confirmed
+2.1,BIT 216,Data Structures and Algorithms,"Graphs: traversal, MST, topology, shortest path",DSA course outline,outline_confirmed
+2.1,BIT 216,Data Structures and Algorithms,Algorithm analysis and asymptotic notation,DSA course outline,outline_confirmed
+2.1,BIT 216,Data Structures and Algorithms,Sorting and searching,DSA course outline,outline_confirmed
+2.1,BCS 2218,Internet Application Programming,"HTML elements, tables, forms, images",2021 revision questions plus folder chapter files,topic_inferred_from_material
+2.1,BCS 2218,Internet Application Programming,"CSS styles, color, layout and selectors",2021 revision questions plus folder chapter files,topic_inferred_from_material
+2.1,BCS 2218,Internet Application Programming,"JavaScript data types, functions, objects and events",2021 revision questions plus folder chapter files,topic_inferred_from_material
+2.1,BCS 2218,Internet Application Programming,"PHP control structures, arrays, files and MySQL",2021 revision questions plus folder chapter files,topic_inferred_from_material
+4.1,BIT 2413,E-Commerce,CRM and ERP,2022 mid-semester CAT,cat_question_topic
+4.1,BIT 2413,E-Commerce,Porter competitive forces and competitive advantage,2022 mid-semester CAT,cat_question_topic
+4.1,BIT 2413,E-Commerce,BYOD and e-learning risks,2022 mid-semester CAT,cat_question_topic
+4.1,BIT 2413,E-Commerce,WLAN addressing and mobility,2022 mid-semester CAT,cat_question_topic
+4.1,BIT 2413,E-Commerce,Bullwhip effect and supply chain information,2022 mid-semester CAT,cat_question_topic

@@ -1,0 +1,44 @@
+name: NiCat backend checks
+on:
+  push:
+  pull_request:
+jobs:
+  postgres-and-django:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: nicat
+          POSTGRES_PASSWORD: ci_not_for_production
+          POSTGRES_DB: nicat
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U nicat -d nicat"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_DB: nicat
+      POSTGRES_USER: nicat
+      POSTGRES_PASSWORD: ci_not_for_production
+      DJANGO_SECRET_KEY: ci-secret-only-never-deploy-to-production
+      JWT_SIGNING_KEY: ci-different-jwt-signing-key-not-for-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m compileall -q backend
+      - run: python -m unittest discover -s backend/tests -p test_domain_standalone.py
+      # Deliberately DO NOT generate migrations in CI; missing drift commits must fail.
+      - run: cd backend && python manage.py makemigrations --check --dry-run
+      - run: cd backend && python manage.py migrate --noinput
+      - run: cd backend && python manage.py migrate --check
+      - run: cd backend && python manage.py check
+      - run: pytest -q --cov=apps --cov-report=term-missing
+      - run: ruff check backend
+      - run: cd backend && python manage.py spectacular --file /tmp/nicat-openapi.yaml --validate
+      - run: python -m pip check
+      - run: python -m pip_audit -r requirements.txt

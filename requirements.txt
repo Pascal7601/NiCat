@@ -1,0 +1,7 @@
+# Install the latest patched Django 5.2 LTS within this supported range.
+Django>=5.2.19,<5.3
+djangorestframework>=3.18.3,<3.19
+drf-spectacular>=0.28,<1
+psycopg[binary]>=3.2.5,<4
+gunicorn>=23,<24
+djangorestframework-simplejwt[crypto]>=5.5.1,<6
