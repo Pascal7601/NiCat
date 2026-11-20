@@ -79,3 +79,50 @@ def test_login_throttle_still_blocks_excessive_attempts():
 
     assert status_codes[:5] == [401] * 5
     assert status_codes[5] == 429
+
+
+@pytest.mark.django_db
+def test_expired_access_token_can_be_recovered_with_refresh():
+    from datetime import timedelta
+
+    from django.utils import timezone
+    from rest_framework_simplejwt.tokens import AccessToken
+
+    user = User.objects.create_user(
+        "expiry-student@example.test",
+        "SecureTestPassword!2026",
+    )
+
+    expired_access = AccessToken.for_user(user)
+
+    # Simulate an expired access token without waiting 15 minutes.
+    expired_access["exp"] = int(
+        (timezone.now() - timedelta(seconds=10)).timestamp()
+    )
+
+    api = APIClient()
+    api.credentials(
+        HTTP_AUTHORIZATION=f"Bearer {expired_access}"
+    )
+
+    assert api.get("/api/v1/me/").status_code == 401
+
+    refresh = RefreshToken.for_user(user)
+
+    renewed = APIClient().post(
+        "/api/v1/auth/refresh/",
+        {"refresh": str(refresh)},
+        format="json",
+    )
+
+    assert renewed.status_code == 200, renewed.data
+    assert renewed.data["access"]
+
+    api.credentials(
+        HTTP_AUTHORIZATION=f"Bearer {renewed.data['access']}"
+    )
+
+    profile = api.get("/api/v1/me/")
+
+    assert profile.status_code == 200
+    assert profile.data["email"] == user.email

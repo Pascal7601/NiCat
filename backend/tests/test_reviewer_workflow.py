@@ -120,3 +120,67 @@ def test_correction_needs_separate_permission_and_reason(reviewed_written_exam):
     assert correction_event.details["new_marks"] == "4.50"
     assert correction_event.actor_id == corrector.pk
     assert Grade.objects.get(attempt_id=attempt_id).scored_marks == Decimal("4.50")
+
+
+
+@pytest.mark.django_db
+def test_student_feedback_is_released_only_after_finalization(
+    reviewed_written_exam,
+):
+    (
+        student_client,
+        reviewer,
+        _corrector,
+        _student,
+        attempt_id,
+        item,
+    ) = reviewed_written_exam
+
+    before = student_client.get(
+        f"/api/v1/attempts/{attempt_id}/result/"
+    )
+
+    assert before.status_code == 200
+    assert before.data["status"] == "grading_pending"
+    assert before.data["final_percentage"] is None
+
+    assert (
+        before.data["items"][0].get("student_feedback")
+        is None
+    )
+
+    reviewing = APIClient()
+    reviewing.force_authenticate(user=reviewer)
+
+    marked = reviewing.post(
+        f"/api/v1/review/grade-items/{item.id}/mark/",
+        {
+            "marks_awarded": "4.00",
+            "rationale": (
+                "Awarded four marks after applying "
+                "the approved rubric."
+            ),
+            "student_feedback": (
+                "Good explanation of the FIFO concept."
+            ),
+        },
+        format="json",
+    )
+
+    assert marked.status_code == 200, marked.data
+
+    after = student_client.get(
+        f"/api/v1/attempts/{attempt_id}/result/"
+    )
+
+    assert after.status_code == 200
+    assert after.data["status"] == "graded_final"
+    assert after.data["final_percentage"] == "80.00"
+
+    assert (
+        after.data["items"][0]["student_feedback"]
+        == "Good explanation of the FIFO concept."
+    )
+
+    # Internal audit rationale is never sent to students.
+    assert "Awarded four marks" not in str(after.data)

@@ -194,3 +194,64 @@ def test_student_attempt_metadata_and_history(
     assert other_client.get(
         f"/api/v1/attempts/{attempt_id}/"
     ).status_code == 404
+
+
+
+@pytest.mark.django_db
+def test_student_cannot_replace_another_students_answer(
+    users,
+    sample_exam,
+):
+    from apps.attempts.models import StudentResponse
+
+    exam, correct, _, _ = sample_exam
+
+    owner = APIClient()
+    owner.force_authenticate(user=users[0])
+
+    intruder = APIClient()
+    intruder.force_authenticate(user=users[1])
+
+    started = owner.post(
+        f"/api/v1/exams/{exam.id}/attempts/",
+        format="json",
+    )
+
+    assert started.status_code == 201, started.data
+
+    attempt_id = started.data["id"]
+    question_id = started.data["questions"][0]["id"]
+
+    stolen_write = intruder.put(
+        f"/api/v1/attempts/{attempt_id}"
+        f"/responses/{question_id}/",
+        {"selected_option_id": str(correct.id)},
+        format="json",
+    )
+
+    assert stolen_write.status_code == 404
+
+    assert not StudentResponse.objects.filter(
+        attempt_question__attempt_id=attempt_id
+    ).exists()
+
+    legitimate_write = owner.put(
+        f"/api/v1/attempts/{attempt_id}"
+        f"/responses/{question_id}/",
+        {"selected_option_id": str(correct.id)},
+        format="json",
+    )
+
+    assert legitimate_write.status_code == 200
+
+    assert StudentResponse.objects.filter(
+        attempt_question__attempt_id=attempt_id
+    ).count() == 1
+
+    assert intruder.get(
+        f"/api/v1/attempts/{attempt_id}/"
+    ).status_code == 404
+
+    assert intruder.get(
+        f"/api/v1/attempts/{attempt_id}/result/"
+    ).status_code == 404
