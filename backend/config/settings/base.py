@@ -16,6 +16,7 @@ INSTALLED_APPS = [
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -44,6 +45,18 @@ USE_I18N = True
 USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": (
+            "whitenoise.storage."
+            "CompressedManifestStaticFilesStorage"
+        ),
+    },
+}
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
@@ -81,3 +94,19 @@ SIMPLE_JWT = {
     "JTI_CLAIM": "jti",
     "CHECK_REVOKE_TOKEN": True,
 }
+
+# Sprint 6: AI-assisted essay marking
+
+if "apps.ai_tutor" not in INSTALLED_APPS:
+    INSTALLED_APPS.append("apps.ai_tutor")
+
+REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["ai_marking"] = "10/hour"
+
+NICAT_AI_MARKING_ENABLED = (
+    os.environ.get("NICAT_AI_MARKING_ENABLED", "false").lower()
+    == "true"
+)
+
+NICAT_AI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+
+NICAT_AI_MODEL = os.environ.get("NICAT_AI_MODEL", "")
