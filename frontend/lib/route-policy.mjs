@@ -112,6 +112,8 @@ ALLOWED.POST.push(
     new RegExp(`^/staff/followups/${U}/action/$`),
 );
 
+ALLOWED.POST.push(/^\/staff\/questions\/search\/$/);
+
 const AI_SUGGESTION = new RegExp(`^/review/grade-items/${U}/ai-suggestion/$`);
 
 ALLOWED.GET.push(AI_SUGGESTION);

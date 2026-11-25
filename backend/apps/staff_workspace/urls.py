@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, question_browser
 
 urlpatterns = [
     path("staff/overview/", views.overview),
@@ -11,6 +11,7 @@ urlpatterns = [
     path("staff/sources/excerpts/", views.excerpts),
     path("staff/sources/excerpts/<uuid:excerpt_id>/", views.excerpt_detail),
     path("staff/sources/excerpts/<uuid:excerpt_id>/action/", views.excerpt_action),
+    path("staff/questions/search/", question_browser.search_questions),
     path("staff/tutor/", views.tutor_list),
     path("staff/tutor/generate/", views.tutor_generate),
     path("staff/tutor/<uuid:explanation_id>/", views.tutor_detail),

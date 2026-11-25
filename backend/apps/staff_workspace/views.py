@@ -135,6 +135,7 @@ def overview(request):
     permissions = {
         "sources": user.has_perm("study_tutor.view_sourceexcerpt"),
         "tutor": user.has_perm("study_tutor.view_tutorexplanation"),
+        "questions": user.has_perm("study_tutor.view_tutorexplanation") and user.has_perm("questions.view_questionrevision"),
         "contributions": user.has_perm("contributions.view_contribution"),
         "followups": user.has_perm("study_coach.view_tutorfollowup"),
     }

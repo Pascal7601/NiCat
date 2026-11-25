@@ -9,6 +9,7 @@ import {
     BookMarked,
     ClipboardCheck,
     FileCheck2,
+    ListChecks,
     GraduationCap,
     LayoutDashboard,
     LibraryBig,
@@ -29,6 +30,12 @@ const staffLinks = [
         label: "Source library",
         icon: LibraryBig,
         permission: "sources",
+    },
+    {
+        href: "/staff/questions",
+        label: "Question Bank",
+        icon: ListChecks,
+        permission: "questions",
     },
     {
         href: "/staff/tutor",

@@ -4,6 +4,8 @@ export function staffReturnPath(search) {
   const staffPages = new Set([
     '/staff',
     '/staff/sources',
+    '/staff/questions',
+    '/staff/documents',
     '/staff/tutor',
     '/staff/contributions',
     '/staff/followups',

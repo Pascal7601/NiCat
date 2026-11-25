@@ -10,6 +10,7 @@ type GateStatus = 'checking' | 'allowed' | 'forbidden' | 'disabled' | 'error';
 
 export type StaffPermissions = {
   sources: boolean;
+  questions: boolean;
   tutor: boolean;
   contributions: boolean;
   followups: boolean;
@@ -48,7 +49,7 @@ export default function StaffAccessGate({ children }: { children: ReactNode }) {
         if (!mounted) return;
         if (error instanceof ClientError && error.status === 401) {
           // Only a known, local staff path is sent as the post-login destination.
-          const safePath = /^\/staff(?:\/(?:sources|tutor|contributions|followups))?$/.test(pathname)
+          const safePath = /^\/staff(?:\/(?:sources|tutor|contributions|followups|documents|questions))?$/.test(pathname)
             ? pathname
             : '/staff';
           router.replace(`/login?next=${encodeURIComponent(safePath)}`);
