@@ -9,4 +9,5 @@ urlpatterns = [
     path("document-intake/staff/", views.staff_documents),
     path("document-intake/staff/<uuid:document_id>/", views.staff_detail),
     path("document-intake/staff/<uuid:document_id>/review/", views.staff_review),
+    path("document-intake/staff/<uuid:document_id>/create-unit/", views.staff_create_and_map_unit),
 ]

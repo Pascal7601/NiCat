@@ -8,9 +8,10 @@ from pathlib import Path
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.utils.text import slugify
 from django.utils import timezone
 
-from apps.academics.models import CurriculumUnit, Unit
+from apps.academics.models import CurriculumUnit, CurriculumVersion, Unit
 from .models import DocumentSubmission, DocumentReviewEvent
 from .storage import private_path, save_original
 
@@ -243,3 +244,77 @@ def review_document(*, document_id, actor, action, rationale, unit=None):
     _audit(entry, actor, action, rationale)
     # Deliberately no QuestionRevision, SourceDocument or SourceExcerpt created.
     return entry
+
+
+@transaction.atomic
+def create_and_map_verified_unit(
+    *, document_id, actor, curriculum_version, title, year_number,
+    semester_number, rationale, catalogue_verified=False,
+):
+    """Explicit staff catalogue approval of a student-suggested unit.
+
+    The catalogue is authoritative; suggestions do not auto-create units.
+    Shared global Unit records are reused by exact title only after explicit
+    staff confirmation. Writes and the mapping audit event are atomic.
+    """
+    _require_reviewer(actor, "document_intake.map_document_units")
+    _require_reviewer(actor, "academics.add_curriculumunit")
+    if not catalogue_verified:
+        raise IntakeConflict("Confirm that the unit and curriculum placement have been verified")
+    rationale = (rationale or "").strip()
+    if len(rationale) < 25:
+        raise IntakeConflict("A review rationale of at least 25 characters is required")
+    normalized_title = re.sub(r"\s+", " ", title or "").strip()
+    if len(normalized_title) < 4 or len(normalized_title) > 200:
+        raise IntakeConflict("Enter a verified unit title of 4–200 characters")
+    entry = DocumentSubmission.objects.select_for_update().get(pk=document_id)
+    if entry.state in (entry.State.WITHDRAWN, entry.State.REJECTED, entry.State.APPROVED):
+        raise IntakeConflict("This document is closed and cannot be mapped")
+    if entry.unit_id:
+        raise IntakeConflict("Document already has a verified unit; use the current mapping")
+
+    # Lock the curriculum row so concurrent requests through this workflow
+    # cannot add duplicate mappings for the same curriculum version.
+    version = CurriculumVersion.objects.select_for_update().get(pk=curriculum_version.pk)
+    if version.programme_id != entry.programme_id:
+        raise IntakeConflict("Curriculum version does not belong to the submitted programme")
+
+    candidates = list(Unit.objects.filter(title__iexact=normalized_title)[:2])
+    if len(candidates) > 1:
+        raise IntakeConflict("Multiple catalogue units share this title; resolve duplicates before mapping")
+    created = False
+    if candidates:
+        unit = candidates[0]
+    else:
+        _require_reviewer(actor, "academics.add_unit")
+        # Use a distinct slug so a similarly named unit does not cause a
+        # collision; do not treat a suggested unit code as verified metadata.
+        max_len = Unit._meta.get_field("slug").max_length or 200
+        slug = f"{slugify(normalized_title)[:max(1, max_len - 9)]}-{uuid.uuid4().hex[:8]}"
+        unit = Unit(title=normalized_title, slug=slug)
+        unit.full_clean()
+        unit.save()
+        created = True
+
+    mapping = CurriculumUnit.objects.filter(curriculum_version=version, unit=unit).first()
+    if mapping is None:
+        mapping = CurriculumUnit(
+            curriculum_version=version, unit=unit,
+            year_number=year_number, semester_number=semester_number,
+        )
+        mapping.full_clean()
+        mapping.save()
+    elif mapping.year_number != year_number or mapping.semester_number != semester_number:
+        raise IntakeConflict("Existing curriculum placement differs; verify it before mapping")
+
+    entry.unit = unit
+    if entry.scan_state == entry.ScanState.CLEAN and entry.extraction_state == entry.ExtractionState.DONE:
+        entry.state = entry.State.PENDING_REVIEW
+    entry.save(update_fields=["unit", "state", "updated_at"])
+    action = "unit_created_and_mapped" if created else "existing_unit_linked_and_mapped"
+    audit_rationale = (
+        f"{rationale} | curriculum={version.pk}; year={year_number}; "
+        f"semester={semester_number}; suggested_code={entry.suggested_unit_code or '-'}"
+    )
+    _audit(entry, actor, action, audit_rationale)
+    return entry, created

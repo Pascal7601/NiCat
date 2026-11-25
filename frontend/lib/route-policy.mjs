@@ -131,6 +131,8 @@ ALLOWED.POST.push(
     new RegExp(`^/document-intake/staff/${U}/review/$`),
 );
 
+ALLOWED.POST.push(new RegExp(`^/document-intake/staff/${U}/create-unit/$`));
+
 export function permitted(method, path) {
     return (
         Object.hasOwn(ALLOWED, method) &&

@@ -99,3 +99,80 @@ def test_scan_fail_closed_and_review_requires_two_people(intake,monkeypatch):
         # Approval does not insert new questions or publish any document file.
         assert approved.events.filter(action='academic_approve').count()==1
         assert not hasattr(approved,'published_url')
+
+
+# Missing-unit catalogue resolution and authorization tests.
+def set_permissions(user, *permissions):
+    for app_label, codename in permissions:
+        user.user_permissions.add(Permission.objects.get(content_type__app_label=app_label, codename=codename))
+    return get_user_model().objects.get(pk=user.pk)
+
+
+def upload_unmapped(owner, programme, original_data):
+    fields = {k: v for k, v in original_data.items() if k != 'unit_id'}
+    fields.update({'suggested_unit_title': 'Computer Vision', 'suggested_unit_code': 'CG-410',
+                   'year_number': '4', 'semester_number': '1'})
+    file = SimpleUploadedFile('vision.txt', ('Computer Vision introduction and key concepts. ' * 8).encode('utf-8'))
+    return as_user(owner).post(URL, {**fields, 'file': file}, format='multipart')
+
+
+
+@pytest.mark.django_db
+def test_missing_unit_authorization_and_creation(intake):
+    owner, outsider, rights, academic, programme, unit, data, root = intake
+    editor = get_user_model().objects.create_user(email='catalogue-editor@example.test',
+                password='Password-12345', is_staff=True)
+    version = CurriculumVersion.objects.get(programme=programme)
+    with override_settings(NICAT_DOCUMENT_INTAKE_ENABLED=True, NICAT_DOCUMENT_PRIVATE_ROOT=root):
+        uploaded = upload_unmapped(owner, programme, data)
+        assert uploaded.status_code == 201, uploaded.data
+        document_id = uploaded.data['id']
+        url = f'{URL}staff/{document_id}/create-unit/'
+        request = {'curriculum_version_id': str(version.pk), 'title': 'Computer Vision',
+                   'year_number': 4, 'semester_number': 1, 'catalogue_verified': True,
+                   'rationale': 'Checked the programme syllabus and curriculum placement.'}
+        assert as_user(owner).post(url, request, format='json').status_code == 403
+        assert as_user(editor).post(url, request, format='json').status_code == 403
+        editor = set_permissions(editor, ('document_intake', 'map_document_units'))
+        assert as_user(editor).post(url, request, format='json').status_code == 403
+        editor = set_permissions(editor, ('academics', 'add_curriculumunit'), ('academics', 'add_unit'))
+        rejected = as_user(editor).post(url, {**request, 'catalogue_verified': False}, format='json')
+        assert rejected.status_code == 409
+        answer = as_user(editor).post(url, request, format='json')
+        assert answer.status_code == 200, answer.data
+        assert answer.data['unit_created'] is True
+        submission = DocumentSubmission.objects.get(pk=document_id)
+        assert submission.unit.title == 'Computer Vision'
+        assert submission.state == DocumentSubmission.State.PENDING_SCAN
+        assert CurriculumUnit.objects.filter(curriculum_version=version, unit=submission.unit,
+            year_number=4, semester_number=1).exists()
+        assert submission.events.filter(action='unit_created_and_mapped').count() == 1
+        assert as_user(editor).post(url, request, format='json').status_code == 409
+        listing = as_user(owner).get(f'{URL}programmes/{programme.pk}/units/')
+        assert listing.status_code == 200
+        assert any(row['id'] == str(submission.unit_id) for row in listing.data['items'])
+        assert any(row['id'] == str(version.pk) for row in listing.data['curriculum_versions'])
+
+
+@pytest.mark.django_db
+def test_missing_unit_rejects_wrong_programme_curriculum(intake):
+    owner, outsider, rights, academic, programme, unit, data, root = intake
+    editor = get_user_model().objects.create_user(email='catalogue-editor-2@example.test',
+                password='Password-12345', is_staff=True)
+    editor = set_permissions(editor, ('document_intake','map_document_units'),
+                             ('academics','add_curriculumunit'), ('academics','add_unit'))
+    second = Programme.objects.create(university=programme.university, name='Another Programme')
+    foreign_version = CurriculumVersion.objects.create(programme=second, label='Another')
+    with override_settings(NICAT_DOCUMENT_INTAKE_ENABLED=True, NICAT_DOCUMENT_PRIVATE_ROOT=root):
+        uploaded = upload_unmapped(owner, programme, data)
+        assert uploaded.status_code == 201, uploaded.data
+        doc_id = uploaded.data['id']
+        before = Unit.objects.count()
+        answer = as_user(editor).post(f'{URL}staff/{doc_id}/create-unit/', {
+            'curriculum_version_id': str(foreign_version.pk), 'title': 'Computer Vision',
+            'year_number': 4, 'semester_number': 1, 'catalogue_verified': True,
+            'rationale': 'Checked the unit in a different programme incorrectly.',
+        }, format='json')
+        assert answer.status_code == 409
+        assert Unit.objects.count() == before
+        assert DocumentSubmission.objects.get(pk=doc_id).unit_id is None

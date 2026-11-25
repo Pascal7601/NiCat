@@ -9,10 +9,13 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework import serializers
 
-from apps.academics.models import Programme, CurriculumUnit, Unit
+from apps.academics.models import Programme, CurriculumVersion, CurriculumUnit, Unit
 from .models import DocumentSubmission
 from .serializers import DocumentSubmitSerializer, StudentDocumentSerializer
-from .services import IntakeConflict, IntakeQuotaExceeded, review_document, submit_document, withdraw_document
+from .services import (
+    IntakeConflict, IntakeQuotaExceeded, create_and_map_verified_unit,
+    review_document, submit_document, withdraw_document,
+)
 
 
 class DocumentThrottle(ScopedRateThrottle):
@@ -50,7 +53,11 @@ def programme_units(request, programme_id):
     get_object_or_404(Programme, pk=programme_id)
     ids = CurriculumUnit.objects.filter(curriculum_version__programme_id=programme_id).values_list("unit_id", flat=True)
     units = Unit.objects.filter(pk__in=ids).order_by("title")[:300]
-    return Response({"items": [{"id": str(u.pk), "title": u.title} for u in units]})
+    versions = CurriculumVersion.objects.filter(programme_id=programme_id).order_by("label", "pk")[:50]
+    return Response({
+        "items": [{"id": str(u.pk), "title": u.title} for u in units],
+        "curriculum_versions": [{"id": str(v.pk), "label": v.label} for v in versions],
+    })
 
 
 @api_view(["GET", "POST"])
@@ -118,6 +125,8 @@ def staff_detail(request, document_id):
     i = get_object_or_404(DocumentSubmission.objects.select_related("student", "programme", "unit"), pk=document_id)
     return Response({"id": str(i.pk), "title": i.title, "programme": i.programme.name,
        "programme_id": str(i.programme_id), "unit": i.unit.title if i.unit_id else "", "suggested_unit_title": i.suggested_unit_title,
+       "suggested_unit_code": i.suggested_unit_code,
+       "year_number": i.year_number, "semester_number": i.semester_number,
        "document_type": i.document_type, "source_owner": i.author_or_owner, "rights_basis": i.rights_basis,
        "rights_evidence": i.rights_evidence, "description": i.description, "suggested_topics": i.suggested_topics,
        "size_bytes": i.size_bytes, "original_filename": i.original_filename,
@@ -154,3 +163,40 @@ def staff_review(request, document_id):
     except IntakeConflict as exc:
         return Response({"code": "review_conflict", "message": str(exc)}, status=409)
     return Response({"id": str(entry.pk), "state": entry.state})
+
+
+class VerifiedUnitSerializer(serializers.Serializer):
+    curriculum_version_id = serializers.PrimaryKeyRelatedField(
+        queryset=CurriculumVersion.objects.all(), source="curriculum_version"
+    )
+    title = serializers.CharField(min_length=4, max_length=200)
+    year_number = serializers.IntegerField(min_value=1, max_value=8)
+    semester_number = serializers.IntegerField(min_value=1, max_value=4)
+    rationale = serializers.CharField(min_length=25, max_length=1500)
+    catalogue_verified = serializers.BooleanField(required=True)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def staff_create_and_map_unit(request, document_id):
+    """Explicit academic catalogue action; students may never create verified units."""
+    if not _enabled():
+        return Response({"code": "disabled"}, status=404)
+    serializer = VerifiedUnitSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    try:
+        entry, created = create_and_map_verified_unit(
+            document_id=document_id, actor=request.user, **serializer.validated_data
+        )
+    except DocumentSubmission.DoesNotExist:
+        return Response({"code": "not_found"}, status=404)
+    except PermissionDenied:
+        return Response({"code": "forbidden"}, status=403)
+    except CurriculumVersion.DoesNotExist:
+        return Response({"code": "bad_curriculum"}, status=400)
+    except (IntakeConflict, ValidationError) as exc:
+        return Response({"code": "catalogue_conflict", "message": str(exc)}, status=409)
+    return Response({
+        "id": str(entry.pk), "unit_id": str(entry.unit_id),
+        "unit_created": created, "state": entry.state,
+    })
