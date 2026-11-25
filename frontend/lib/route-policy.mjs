@@ -117,6 +117,20 @@ const AI_SUGGESTION = new RegExp(`^/review/grade-items/${U}/ai-suggestion/$`);
 ALLOWED.GET.push(AI_SUGGESTION);
 ALLOWED.POST.push(AI_SUGGESTION);
 
+// Sprint 13: GET/catalogue/history/staff review are JSON-only.
+// Binary POST goes to the dedicated /api/nicat/document-upload/ route.
+ALLOWED.GET.push(
+    /^\/document-intake\/programmes\/$/,
+    new RegExp(`^/document-intake/programmes/${U}/units/$`),
+    /^\/document-intake\/$/,
+    /^\/document-intake\/staff\/$/,
+    new RegExp(`^/document-intake/staff/${U}/$`),
+);
+ALLOWED.POST.push(
+    new RegExp(`^/document-intake/${U}/withdraw/$`),
+    new RegExp(`^/document-intake/staff/${U}/review/$`),
+);
+
 export function permitted(method, path) {
     return (
         Object.hasOwn(ALLOWED, method) &&

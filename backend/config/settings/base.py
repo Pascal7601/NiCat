@@ -14,7 +14,7 @@ INSTALLED_APPS = [
     "apps.accounts", "apps.academics", "apps.resources", "apps.questions",
     "apps.exams", "apps.attempts", "apps.analytics", "apps.common", "apps.study_tutor",
     "apps.study_coach", "apps.beta_guard.apps.BetaGuardConfig","apps.contributions.apps.ContributionsConfig",
-    "apps.staff_workspace.apps.StaffWorkspaceConfig",
+    "apps.staff_workspace.apps.StaffWorkspaceConfig", "apps.document_intake.apps.DocumentIntakeConfig",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -149,3 +149,20 @@ NICAT_STAFF_WORKSPACE_ENABLED = (
 )
 
 NICAT_STAFF_ALLOW_MOCK_PUBLICATION_FOR_TESTS = False
+
+NICAT_DOCUMENT_INTAKE_ENABLED = (
+    os.environ.get("NICAT_DOCUMENT_INTAKE_ENABLED", "false").lower()
+    == "true"
+)
+
+NICAT_DOCUMENT_DAILY_LIMIT = 3
+NICAT_DOCUMENT_MAX_BYTES = 8 * 1024 * 1024
+
+NICAT_DOCUMENT_PRIVATE_ROOT = os.environ.get(
+    "NICAT_DOCUMENT_PRIVATE_ROOT",
+    str(BASE_DIR.parent / "private_document_uploads"),
+)
+
+REST_FRAMEWORK.setdefault(
+    "DEFAULT_THROTTLE_RATES", {}
+)["document_uploads"] = "6/hour"
