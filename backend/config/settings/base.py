@@ -13,6 +13,7 @@ INSTALLED_APPS = [
     "rest_framework", "drf_spectacular", "rest_framework_simplejwt.token_blacklist",
     "apps.accounts", "apps.academics", "apps.resources", "apps.questions",
     "apps.exams", "apps.attempts", "apps.analytics", "apps.common", "apps.study_tutor",
+    "apps.study_coach",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -101,6 +102,12 @@ if "apps.ai_tutor" not in INSTALLED_APPS:
     INSTALLED_APPS.append("apps.ai_tutor")
 
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["ai_marking"] = "10/hour"
+
+NICAT_AI_FOLLOWUPS_ENABLED = os.environ.get("NICAT_AI_FOLLOWUPS_ENABLED", "false").lower() == "true"
+NICAT_AI_RECOMMENDATIONS_ENABLED = os.environ.get("NICAT_AI_RECOMMENDATIONS_ENABLED", "false").lower() == "true"
+NICAT_COACH_STUDENT_DAILY_LIMIT = int(os.environ.get("NICAT_COACH_STUDENT_DAILY_LIMIT", "3"))
+NICAT_COACH_GLOBAL_DAILY_LIMIT = int(os.environ.get("NICAT_COACH_GLOBAL_DAILY_LIMIT", "100"))
+REST_FRAMEWORK.setdefault("DEFAULT_THROTTLE_RATES", {})["coach_followups"] = "20/hour"
 
 NICAT_AI_MARKING_ENABLED = (
     os.environ.get("NICAT_AI_MARKING_ENABLED", "false").lower()

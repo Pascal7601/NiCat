@@ -31,6 +31,14 @@ export const ALLOWED = {
 };
 
 ALLOWED.GET.push(
+    new RegExp(`^/study-coach/attempts/${U}/questions/${U}/followups/$`),
+);
+ALLOWED.POST.push(
+    new RegExp(`^/study-coach/attempts/${U}/questions/${U}/followups/$`),
+);
+ALLOWED.GET.push(/^\/study-coach\/recommendations\/$/);
+
+ALLOWED.GET.push(
     new RegExp(`^/study-tutor/attempts/${U}/questions/${U}/explanation/$`),
 );
 ALLOWED.POST.push(new RegExp(`^/study-tutor/revisions/${U}/draft/$`));
