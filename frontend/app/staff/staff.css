@@ -1,0 +1,63 @@
+/* Scoped to Sprint 12: reuse NiCat's student palette, sidebar and card components. */
+.staff-workspace { min-height: 100vh; }
+.staff-workspace .staff-sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.staff-workspace .staff-nav { display: grid; gap: 4px; }
+.staff-workspace .staff-nav .nav-link { transition: background-color 120ms ease; }
+.staff-workspace .staff-foot-label { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
+.staff-workspace .staff-main { max-width: none; min-width: 0; }
+.staff-workspace .staff-topline { padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 25px; }
+.staff-workspace .staff-topline .subhead { max-width: 68ch; margin-bottom: 0; }
+.staff-workspace .staff-content { width: 100%; max-width: 1460px; }
+.staff-workspace .card { box-shadow: 0 8px 24px rgba(24, 32, 68, .035); }
+.staff-workspace .card h2 { font-size: 1.18rem; margin-top: 0; line-height: 1.3; }
+.staff-workspace .card h3 { font-size: 1rem; margin-top: 12px; }
+.staff-workspace .card p { line-height: 1.55; }
+.staff-workspace .card form { min-width: 0; }
+.staff-workspace label { display: block; font-size: .87rem; font-weight: 650; color: var(--ink); }
+.staff-workspace input:not([type="checkbox"]):not([type="radio"]),
+.staff-workspace select,
+.staff-workspace textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 45px;
+  margin-top: 7px;
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--ink);
+  background: var(--white);
+  font: inherit;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.staff-workspace textarea { min-height: 110px; resize: vertical; }
+.staff-workspace :is(input, select, textarea):focus-visible { outline: 3px solid #998fff; outline-offset: 1px; border-color: var(--primary); }
+.staff-workspace :is(input, select, textarea):disabled { background: var(--bg); opacity: .75; }
+.staff-workspace .button { white-space: normal; text-align: center; }
+.staff-workspace .button.ghost:hover:not(:disabled) { background: var(--soft); color: var(--primary-dark); }
+.staff-workspace .card ul { padding-left: 1.25rem; overflow-wrap: anywhere; }
+.staff-workspace .card li + li { margin-top: 9px; }
+.staff-workspace .card :is(h2, h3, p, li) { overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  .staff-workspace .staff-sidebar {
+    position: static;
+    height: auto;
+    width: 100%;
+    display: block;
+    padding: 12px 14px;
+  }
+  .staff-workspace .staff-sidebar .brand { display: inline-flex; margin-bottom: 12px; }
+  .staff-workspace .staff-sidebar .staff-nav { display: flex; flex-wrap: nowrap; gap: 7px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 8px; }
+  .staff-workspace .staff-sidebar .staff-nav .nav-link { flex: 0 0 auto; white-space: nowrap; }
+  .staff-workspace .staff-sidebar .nav-label { display: none; }
+  .staff-workspace .staff-sidebar .sidebar-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0 0; }
+  .staff-workspace .staff-sidebar .sidebar-foot .tiny,
+  .staff-workspace .staff-sidebar .staff-foot-label { display: none; }
+  .staff-workspace .staff-sidebar .sidebar-foot button { width: auto !important; margin-top: 0 !important; }
+  .staff-workspace .staff-main { padding: 26px 16px 55px; }
+  .staff-workspace .staff-topline { margin-bottom: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .staff-workspace .staff-nav .nav-link { transition: none; }
+}
