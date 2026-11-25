@@ -14,6 +14,7 @@ INSTALLED_APPS = [
     "apps.accounts", "apps.academics", "apps.resources", "apps.questions",
     "apps.exams", "apps.attempts", "apps.analytics", "apps.common", "apps.study_tutor",
     "apps.study_coach", "apps.beta_guard.apps.BetaGuardConfig","apps.contributions.apps.ContributionsConfig",
+    "apps.staff_workspace.apps.StaffWorkspaceConfig",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -141,3 +142,10 @@ REST_FRAMEWORK.setdefault("DEFAULT_THROTTLE_RATES", {})["tutor_drafts"] = "8/hou
 NICAT_AI_PROVIDER = os.environ.get(
     "NICAT_AI_PROVIDER", "openai"
 ).lower()
+
+NICAT_STAFF_WORKSPACE_ENABLED = (
+    os.environ.get("NICAT_STAFF_WORKSPACE_ENABLED", "false").lower()
+    == "true"
+)
+
+NICAT_STAFF_ALLOW_MOCK_PUBLICATION_FOR_TESTS = False

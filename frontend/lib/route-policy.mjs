@@ -52,6 +52,66 @@ ALLOWED.POST.push(/^\/contributions\/$/);
 ALLOWED.POST.push(new RegExp(`^/contributions/${U}/withdraw/$`));
 // Sprint 6: narrowly scoped AI-marking endpoints
 
+/*
+ * NiCat v1.2 — Sprint 12
+ * Staff & Academic Management Workspace
+ *
+ * These rules allow only the explicitly listed API paths.
+ * Django must still authenticate users and enforce staff permissions.
+ */
+
+// GET — Staff dashboard and review queues
+ALLOWED.GET.push(
+    // Staff overview
+    /^\/staff\/overview\/$/,
+
+    // Source library
+    /^\/staff\/sources\/units\/$/,
+    /^\/staff\/sources\/documents\/$/,
+    /^\/staff\/sources\/references\/$/,
+    /^\/staff\/sources\/topics\/$/,
+    /^\/staff\/sources\/excerpts\/$/,
+    new RegExp(`^/staff/sources/excerpts/${U}/$`),
+
+    // AI Tutor explanations
+    /^\/staff\/tutor\/$/,
+    new RegExp(`^/staff/tutor/${U}/$`),
+
+    // Student contributions
+    /^\/staff\/contributions\/$/,
+    new RegExp(`^/staff/contributions/${U}/$`),
+
+    // Student follow-up reviews
+    /^\/staff\/followups\/$/,
+    new RegExp(`^/staff/followups/${U}/$`),
+);
+
+// POST — Create, update and review actions
+ALLOWED.POST.push(
+    // Source documents and rights
+    /^\/staff\/sources\/documents\/$/,
+    new RegExp(`^/staff/sources/documents/${U}/rights/$`),
+
+    // Source references and excerpts
+    /^\/staff\/sources\/references\/$/,
+    /^\/staff\/sources\/excerpts\/$/,
+    new RegExp(`^/staff/sources/excerpts/${U}/$`),
+    new RegExp(`^/staff/sources/excerpts/${U}/action/$`),
+
+    // Tutor generation, editing and approval
+    /^\/staff\/tutor\/generate\/$/,
+    new RegExp(`^/staff/tutor/${U}/$`),
+    new RegExp(`^/staff/tutor/${U}/action/$`),
+
+    // Contribution reviews
+    new RegExp(`^/staff/contributions/${U}/$`),
+    new RegExp(`^/staff/contributions/${U}/action/$`),
+
+    // Follow-up reviews
+    new RegExp(`^/staff/followups/${U}/$`),
+    new RegExp(`^/staff/followups/${U}/action/$`),
+);
+
 const AI_SUGGESTION = new RegExp(`^/review/grade-items/${U}/ai-suggestion/$`);
 
 ALLOWED.GET.push(AI_SUGGESTION);
