@@ -13,7 +13,7 @@ INSTALLED_APPS = [
     "rest_framework", "drf_spectacular", "rest_framework_simplejwt.token_blacklist",
     "apps.accounts", "apps.academics", "apps.resources", "apps.questions",
     "apps.exams", "apps.attempts", "apps.analytics", "apps.common", "apps.study_tutor",
-    "apps.study_coach",
+    "apps.study_coach", "apps.beta_guard.apps.BetaGuardConfig",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
