@@ -42,6 +42,14 @@ ALLOWED.GET.push(
     new RegExp(`^/study-tutor/attempts/${U}/questions/${U}/explanation/$`),
 );
 ALLOWED.POST.push(new RegExp(`^/study-tutor/revisions/${U}/draft/$`));
+
+ALLOWED.GET.push(/^\/contributions\/$/, /^\/contributions\/units\/$/);
+
+ALLOWED.GET.push(new RegExp(`^/contributions/${U}/$`));
+
+ALLOWED.POST.push(/^\/contributions\/$/);
+
+ALLOWED.POST.push(new RegExp(`^/contributions/${U}/withdraw/$`));
 // Sprint 6: narrowly scoped AI-marking endpoints
 
 const AI_SUGGESTION = new RegExp(`^/review/grade-items/${U}/ai-suggestion/$`);

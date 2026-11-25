@@ -13,7 +13,7 @@ INSTALLED_APPS = [
     "rest_framework", "drf_spectacular", "rest_framework_simplejwt.token_blacklist",
     "apps.accounts", "apps.academics", "apps.resources", "apps.questions",
     "apps.exams", "apps.attempts", "apps.analytics", "apps.common", "apps.study_tutor",
-    "apps.study_coach", "apps.beta_guard.apps.BetaGuardConfig",
+    "apps.study_coach", "apps.beta_guard.apps.BetaGuardConfig","apps.contributions.apps.ContributionsConfig",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -69,6 +69,19 @@ REST_FRAMEWORK = {
                                  "rest_framework.throttling.UserRateThrottle"],
     "DEFAULT_THROTTLE_RATES": {"anon": "30/min", "user": "240/min"},
 }
+
+NICAT_CONTRIBUTIONS_ENABLED = (
+    os.environ.get("NICAT_CONTRIBUTIONS_ENABLED", "false").lower() == "true"
+)
+
+NICAT_CONTRIBUTION_DAILY_LIMIT = int(
+    os.environ.get("NICAT_CONTRIBUTION_DAILY_LIMIT", "3")
+)
+
+REST_FRAMEWORK.setdefault("DEFAULT_THROTTLE_RATES", {})[
+    "contribution_submissions"
+] = "6/hour"
+
 SPECTACULAR_SETTINGS = {"TITLE": "NiCat API", "DESCRIPTION": "Independent exam practice platform",
                         "VERSION": "0.3.0", "SERVE_INCLUDE_SCHEMA": False}
 SESSION_COOKIE_HTTPONLY = True
