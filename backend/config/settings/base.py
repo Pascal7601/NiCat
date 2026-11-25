@@ -12,7 +12,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions", "django.contrib.messages", "django.contrib.staticfiles",
     "rest_framework", "drf_spectacular", "rest_framework_simplejwt.token_blacklist",
     "apps.accounts", "apps.academics", "apps.resources", "apps.questions",
-    "apps.exams", "apps.attempts", "apps.analytics", "apps.common",
+    "apps.exams", "apps.attempts", "apps.analytics", "apps.common", "apps.study_tutor",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -110,3 +110,14 @@ NICAT_AI_MARKING_ENABLED = (
 NICAT_AI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 
 NICAT_AI_MODEL = os.environ.get("NICAT_AI_MODEL", "")
+
+NICAT_AI_TUTOR_ENABLED = os.environ.get("NICAT_AI_TUTOR_ENABLED", "false").lower() == "true"
+NICAT_AI_TUTOR_GENERATION_ENABLED = (
+    os.environ.get("NICAT_AI_TUTOR_GENERATION_ENABLED", "false").lower() == "true"
+)
+NICAT_AI_TUTOR_MODEL = os.environ.get("NICAT_AI_TUTOR_MODEL", "") or os.environ.get("NICAT_AI_MODEL", "")
+REST_FRAMEWORK.setdefault("DEFAULT_THROTTLE_RATES", {})["tutor_drafts"] = "8/hour"
+
+NICAT_AI_PROVIDER = os.environ.get(
+    "NICAT_AI_PROVIDER", "openai"
+).lower()

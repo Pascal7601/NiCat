@@ -30,6 +30,10 @@ export const ALLOWED = {
     PUT: [new RegExp(`^/attempts/${U}/responses/${U}/$`)],
 };
 
+ALLOWED.GET.push(
+    new RegExp(`^/study-tutor/attempts/${U}/questions/${U}/explanation/$`),
+);
+ALLOWED.POST.push(new RegExp(`^/study-tutor/revisions/${U}/draft/$`));
 // Sprint 6: narrowly scoped AI-marking endpoints
 
 const AI_SUGGESTION = new RegExp(`^/review/grade-items/${U}/ai-suggestion/$`);

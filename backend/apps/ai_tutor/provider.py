@@ -46,9 +46,65 @@ Your score is a NON-FINAL proposal. A human reviewer makes the actual decision.
 """
 
 
-def generate_marking(*, prompt: str, answer: str, rubric: list[dict], max_marks: str) -> dict:
-    if not settings.NICAT_AI_MODEL or not settings.NICAT_AI_API_KEY:
-        raise AIProviderError("AI provider is not configured")
+from decimal import Decimal, InvalidOperation
+
+
+def mock_generate_marking(
+    *, prompt: str, answer: str,
+    rubric: list[dict], max_marks: str
+) -> dict:
+    """Deterministic test proposal; NOT real academic grading."""
+    scores = []
+
+    for index, criterion in enumerate(rubric, start=1):
+        try:
+            maximum = Decimal(str(criterion["max_marks"]))
+        except (KeyError, InvalidOperation, TypeError, ValueError) as exc:
+            raise AIProviderError("Invalid mock rubric") from exc
+
+        if maximum < 0:
+            raise AIProviderError("Invalid mock rubric maximum")
+
+        # Award half marks purely to exercise the review workflow.
+        awarded = (maximum / Decimal("2")).quantize(
+            Decimal("0.01")
+        )
+
+        scores.append({
+            "criterion_number": index,
+            "awarded": str(awarded),
+            "reason": (
+                "MOCK TEST DATA: Fixed score for testing. "
+                "No evaluation of the student's answer occurred."
+            ),
+        })
+
+    return {
+        "criterion_scores": scores,
+        "feedback": (
+            "MOCK TEST DATA ONLY. This proposal is not based "
+            "on the student's answer and must not be used "
+            "for real academic grading."
+        ),
+    }
+
+
+def generate_marking(
+    *, prompt: str, answer: str,
+    rubric: list[dict], max_marks: str
+) -> dict:
+    if settings.NICAT_AI_PROVIDER == "mock":
+        return mock_generate_marking(
+            prompt=prompt,
+            answer=answer,
+            rubric=rubric,
+            max_marks=max_marks,
+        )
+
+    if settings.NICAT_AI_PROVIDER != "openai":
+        raise AIProviderError("Unsupported AI provider")
+
+    # Keep the rest of your existing OpenAI implementation here.
     try:
         from openai import OpenAI
 
