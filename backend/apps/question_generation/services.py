@@ -30,6 +30,11 @@ def text_hash(text):
 
 def valid_source(doc):
     return (
+        doc.document_type in (
+            DocumentSubmission.DocumentType.OWN_NOTES,
+            DocumentSubmission.DocumentType.AUTHORIZED_NOTES,
+        )
+        and
         doc.state == DocumentSubmission.State.APPROVED
         and doc.scan_state == DocumentSubmission.ScanState.CLEAN
         and doc.extraction_state == DocumentSubmission.ExtractionState.DONE
@@ -40,6 +45,7 @@ def valid_source(doc):
         and doc.rights_reviewed_by_id != doc.academic_reviewed_by_id
         and bool(doc.extracted_text.strip())
         and not doc.possible_duplicate
+        
     )
 
 

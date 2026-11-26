@@ -18,6 +18,7 @@ urlpatterns = [
     path("api/v1/", include("apps.staff_workspace.urls")),
     path("api/v1/", include("apps.document_intake.urls")),
     path("api/v1/", include("apps.question_generation.urls")),
+    path("api/v1/", include("apps.past_papers.urls")),
     path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/v1/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
 ]

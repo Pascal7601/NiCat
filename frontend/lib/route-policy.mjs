@@ -133,6 +133,24 @@ ALLOWED.POST.push(
     new RegExp(`^/document-intake/staff/${U}/review/$`),
 );
 
+// Sprint 15: verified past-paper review. Paths only, NO query parameters.
+ALLOWED.GET.push(
+    /^\/past-papers\/$/,
+    new RegExp(`^/past-papers/${U}/questions/$`),
+    new RegExp(`^/past-papers/${U}/page/(?:[1-9]|[1-7][0-9]|80)/$`),
+    new RegExp(`^/past-paper-questions/${U}/variations/$`),
+);
+ALLOWED.POST.push(
+    new RegExp(`^/past-papers/${U}/questions/$`),
+    new RegExp(`^/past-papers/${U}/questions/manual/$`),
+    new RegExp(`^/past-papers/${U}/external-authorization/$`),
+    new RegExp(`^/past-paper-questions/${U}/correct/$`),
+    new RegExp(`^/past-paper-questions/${U}/review/$`),
+    new RegExp(`^/past-paper-questions/${U}/variations/$`),
+    new RegExp(`^/past-paper-variations/${U}/edit/$`),
+    new RegExp(`^/past-paper-variations/${U}/review/$`),
+);
+
 // Sprint 14 — only these staff-authenticated JSON API paths.
 ALLOWED.GET.push(
     /^\/question-generation\/sources\/$/,

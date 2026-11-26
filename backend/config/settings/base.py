@@ -15,7 +15,7 @@ INSTALLED_APPS = [
     "apps.exams", "apps.attempts", "apps.analytics", "apps.common", "apps.study_tutor",
     "apps.study_coach", "apps.beta_guard.apps.BetaGuardConfig","apps.contributions.apps.ContributionsConfig",
     "apps.staff_workspace.apps.StaffWorkspaceConfig", "apps.document_intake.apps.DocumentIntakeConfig",
-    "apps.question_generation.apps.QuestionGenerationConfig",
+    "apps.question_generation.apps.QuestionGenerationConfig", "apps.past_papers.apps.PastPapersConfig",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -185,3 +185,5 @@ NICAT_QUESTION_AI_REMOTE_ENABLED = (
 
 NICAT_QUESTION_AI_MODEL = os.environ.get("NICAT_QUESTION_AI_MODEL", "")
 NICAT_QUESTION_AI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+
+NICAT_PAST_PAPERS_ENABLED = os.environ.get("NICAT_PAST_PAPERS_ENABLED", "false").lower() in ("1", "true", "yes")
