@@ -6,6 +6,8 @@ import { Shell, Heading, Notice } from "@/components/Shell";
 import { RequestError } from "@/components/RequestState";
 import { clientRequest, route } from "@/lib/client";
 import { isDemo } from "@/lib/preview";
+import { AIMarkingSuggestionPanel } from "@/components/AIMarkingSuggestionPanel";
+import { TutorDraftGenerator } from "@/components/TutorDraftGenerator";
 
 import type {
     MarkWrittenResponse,
@@ -144,7 +146,7 @@ export default function ReviewPage() {
             <Heading
                 eyebrow="ACADEMIC REVIEW"
                 title="Written-answer marking"
-                subtitle="Review responses using the grading rubrics."
+                subtitle="Review written answers using marking rubrics and optional AI-assisted suggestions. Final marks are awarded by human reviewers."
             />
 
             <p className="muted tiny">
@@ -158,6 +160,7 @@ export default function ReviewPage() {
             )}
 
             <RequestError message={error} />
+            {!isDemo && <TutorDraftGenerator />}
 
             {message && (
                 <p className="review-success" role="status">
@@ -233,6 +236,14 @@ export default function ReviewPage() {
                                     </li>
                                 ))}
                             </ul>
+
+                            {/* AI-ASSISTED MARKING */}
+                            <AIMarkingSuggestionPanel
+                                gradeItemId={id}
+                                onApplySuggestedMarks={(marks) => {
+                                    updateDraft(id, "marks", marks);
+                                }}
+                            />
 
                             <div className="review-fields">
                                 <label>

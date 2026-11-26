@@ -5,3 +5,5 @@ drf-spectacular>=0.28,<1
 psycopg[binary]>=3.2.5,<4
 gunicorn>=23,<24
 djangorestframework-simplejwt[crypto]>=5.5.1,<6
+whitenoise>=6.12,<7
+openai>=2.0,<3

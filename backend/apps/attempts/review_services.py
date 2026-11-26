@@ -10,6 +10,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.utils import timezone
 
+from django.utils import timezone
 from .grading import percentage
 from .models import Attempt, Grade, GradeItem, GradingEvent
 
@@ -130,6 +131,33 @@ def review_written_answer(
         ]
     )
 
+
+    # NEW: Record the human reviewer's decision on the AI suggestion
+    from apps.ai_tutor.models import AIMarkingSuggestion
+
+    suggestion = AIMarkingSuggestion.objects.filter(
+        grade_item_id=item.pk
+    ).first()
+
+    if suggestion is not None:
+        suggestion.review_status = (
+            AIMarkingSuggestion.ReviewStatus.ACCEPTED
+            if suggestion.proposed_marks == item.marks_awarded
+            else AIMarkingSuggestion.ReviewStatus.OVERRIDDEN
+        )
+
+        suggestion.reviewed_by = actor
+        suggestion.reviewed_at = timezone.now()
+
+        suggestion.save(
+            update_fields=[
+                "review_status",
+                "reviewed_by",
+                "reviewed_at",
+            ]
+        )
+
+
     all_final = _recalculate_totals(grade)
 
     if all_final:
@@ -151,6 +179,7 @@ def review_written_answer(
     )
 
     return item
+
 
 @transaction.atomic
 def correct_final_answer(
@@ -227,6 +256,33 @@ def correct_final_answer(
     item.save(
         update_fields=["marks_awarded", "student_feedback"]
     )
+
+    # Record how the human decision compares with the AI proposal.
+    # AI never changes the actual awarded marks.
+    from apps.ai_tutor.models import AIMarkingSuggestion
+
+    suggestion = AIMarkingSuggestion.objects.filter(
+        grade_item_id=item.pk
+    ).first()
+
+    if suggestion is not None:
+        suggestion.review_status = (
+            AIMarkingSuggestion.ReviewStatus.ACCEPTED
+            if marks == suggestion.proposed_marks
+            else AIMarkingSuggestion.ReviewStatus.OVERRIDDEN
+        )
+
+        suggestion.reviewed_by = actor
+        suggestion.reviewed_at = timezone.now()
+
+        suggestion.save(
+            update_fields=[
+                "review_status",
+                "reviewed_by",
+                "reviewed_at",
+            ]
+        )
+
 
     _recalculate_totals(grade)
 

@@ -18,8 +18,15 @@ DATABASES = {"default": {"ENGINE": "django.db.backends.postgresql",
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = True
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+# Begin with one hour during the first deployment.
+# Increase after HTTPS has been verified in production.
+SECURE_HSTS_SECONDS = int(
+    os.environ.get("DJANGO_HSTS_SECONDS", "3600")
+)
+
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 CSRF_TRUSTED_ORIGINS = [x.strip() for x in required("DJANGO_CSRF_TRUSTED_ORIGINS").split(",") if x.strip()]

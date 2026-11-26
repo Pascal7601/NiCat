@@ -12,10 +12,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions", "django.contrib.messages", "django.contrib.staticfiles",
     "rest_framework", "drf_spectacular", "rest_framework_simplejwt.token_blacklist",
     "apps.accounts", "apps.academics", "apps.resources", "apps.questions",
-    "apps.exams", "apps.attempts", "apps.analytics", "apps.common",
+    "apps.exams", "apps.attempts", "apps.analytics", "apps.common", "apps.study_tutor",
+    "apps.study_coach", "apps.beta_guard.apps.BetaGuardConfig",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -44,6 +46,18 @@ USE_I18N = True
 USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": (
+            "whitenoise.storage."
+            "CompressedManifestStaticFilesStorage"
+        ),
+    },
+}
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
@@ -81,3 +95,36 @@ SIMPLE_JWT = {
     "JTI_CLAIM": "jti",
     "CHECK_REVOKE_TOKEN": True,
 }
+
+# Sprint 6: AI-assisted essay marking
+
+if "apps.ai_tutor" not in INSTALLED_APPS:
+    INSTALLED_APPS.append("apps.ai_tutor")
+
+REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["ai_marking"] = "10/hour"
+
+NICAT_AI_FOLLOWUPS_ENABLED = os.environ.get("NICAT_AI_FOLLOWUPS_ENABLED", "false").lower() == "true"
+NICAT_AI_RECOMMENDATIONS_ENABLED = os.environ.get("NICAT_AI_RECOMMENDATIONS_ENABLED", "false").lower() == "true"
+NICAT_COACH_STUDENT_DAILY_LIMIT = int(os.environ.get("NICAT_COACH_STUDENT_DAILY_LIMIT", "3"))
+NICAT_COACH_GLOBAL_DAILY_LIMIT = int(os.environ.get("NICAT_COACH_GLOBAL_DAILY_LIMIT", "100"))
+REST_FRAMEWORK.setdefault("DEFAULT_THROTTLE_RATES", {})["coach_followups"] = "20/hour"
+
+NICAT_AI_MARKING_ENABLED = (
+    os.environ.get("NICAT_AI_MARKING_ENABLED", "false").lower()
+    == "true"
+)
+
+NICAT_AI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+
+NICAT_AI_MODEL = os.environ.get("NICAT_AI_MODEL", "")
+
+NICAT_AI_TUTOR_ENABLED = os.environ.get("NICAT_AI_TUTOR_ENABLED", "false").lower() == "true"
+NICAT_AI_TUTOR_GENERATION_ENABLED = (
+    os.environ.get("NICAT_AI_TUTOR_GENERATION_ENABLED", "false").lower() == "true"
+)
+NICAT_AI_TUTOR_MODEL = os.environ.get("NICAT_AI_TUTOR_MODEL", "") or os.environ.get("NICAT_AI_MODEL", "")
+REST_FRAMEWORK.setdefault("DEFAULT_THROTTLE_RATES", {})["tutor_drafts"] = "8/hour"
+
+NICAT_AI_PROVIDER = os.environ.get(
+    "NICAT_AI_PROVIDER", "openai"
+).lower()

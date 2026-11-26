@@ -1,0 +1,18 @@
+
+{$NICAT_DOMAIN} {
+    encode zstd gzip
+
+    @admin path /admin /admin/*
+    handle @admin {
+        reverse_proxy backend:8000
+    }
+
+    @django_static path /static/*
+    handle @django_static {
+        reverse_proxy backend:8000
+    }
+
+    handle {
+        reverse_proxy frontend:3000
+    }
+}
