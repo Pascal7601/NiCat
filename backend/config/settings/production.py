@@ -32,3 +32,6 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 CSRF_TRUSTED_ORIGINS = [x.strip() for x in required("DJANGO_CSRF_TRUSTED_ORIGINS").split(",") if x.strip()]
 
 SIMPLE_JWT["SIGNING_KEY"] = required("JWT_SIGNING_KEY")
+
+NICAT_CLAMAV_HOST = os.environ.get("NICAT_CLAMAV_HOST", "127.0.0.1")
+NICAT_CLAMAV_PORT = int(os.environ.get("NICAT_CLAMAV_PORT", "3310"))

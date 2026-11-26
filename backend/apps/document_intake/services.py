@@ -4,6 +4,8 @@ import re
 import uuid
 import subprocess
 from pathlib import Path
+import socket
+import struct
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -101,13 +103,64 @@ def withdraw_document(*, document_id, student):
 
 
 def scan_with_clamav(path):
-    """Return clean/blocked/error. Fail closed; no allow-without-scanner mode."""
+    """
+    Scan a private document using ClamAV's INSTREAM protocol.
+
+    Returns:
+        clean   - ClamAV confirms the file is clean.
+        blocked - ClamAV detects malware.
+        error   - Scanner unavailable, protocol error, or scan failure.
+
+    Fail closed: errors never count as clean.
+    """
+    host = getattr(settings, "NICAT_CLAMAV_HOST", "127.0.0.1")
+    port = int(getattr(settings, "NICAT_CLAMAV_PORT", 3310))
+
     try:
-        result = subprocess.run(["clamscan", "--no-summary", str(path)],
-                                capture_output=True, text=True, timeout=35, check=False)
-    except (OSError, subprocess.TimeoutExpired):
+        path = Path(path)
+
+        if not path.is_file():
+            return "error"
+
+        with socket.create_connection((host, port), timeout=10) as connection:
+            connection.settimeout(45)
+
+            # Start ClamAV INSTREAM scan.
+            connection.sendall(b"zINSTREAM\0")
+
+            with path.open("rb") as document:
+                while chunk := document.read(64 * 1024):
+                    connection.sendall(struct.pack("!I", len(chunk)))
+                    connection.sendall(chunk)
+
+            # Zero-length chunk marks the end of the file.
+            connection.sendall(struct.pack("!I", 0))
+
+            response = bytearray()
+
+            while len(response) < 4096:
+                chunk = connection.recv(4096)
+
+                if not chunk:
+                    break
+
+                response.extend(chunk)
+
+                if b"\0" in chunk:
+                    break
+
+            result = response.decode("utf-8", errors="replace").strip("\0\r\n")
+
+            if result == "stream: OK":
+                return "clean"
+
+            if result.startswith("stream: ") and result.endswith(" FOUND"):
+                return "blocked"
+
+            return "error"
+
+    except (OSError, ValueError, OverflowError):
         return "error"
-    return {0: "clean", 1: "blocked"}.get(result.returncode, "error")
 
 
 def extract_text(path, file_type):
@@ -204,6 +257,27 @@ def review_document(*, document_id, actor, action, rationale, unit=None):
         if entry.scan_state == entry.ScanState.CLEAN and entry.extraction_state == entry.ExtractionState.DONE:
             entry.state = entry.State.PENDING_REVIEW
         entry.save(update_fields=["unit", "state", "updated_at"])
+    elif action == "release_rights_hold":
+        _require_reviewer(actor, "document_intake.review_document_rights")
+
+        if entry.state != entry.State.RIGHTS_HOLD:
+            raise IntakeConflict("Document is not on rights hold")
+
+        if entry.scan_state != entry.ScanState.CLEAN:
+            raise IntakeConflict("Document must pass malware scanning")
+
+        if entry.extraction_state != entry.ExtractionState.DONE:
+            raise IntakeConflict("Document must pass text extraction")
+
+        if not entry.unit_id:
+            raise IntakeConflict("Document must have a verified unit mapping")
+
+        if entry.student_id == actor.pk:
+            raise IntakeConflict("Uploader cannot release their own rights hold")
+
+        entry.state = entry.State.PENDING_REVIEW
+        entry.save(update_fields=["state", "updated_at"])
+
     elif action in ("rights_clear", "rights_hold"):
         _require_reviewer(actor, "document_intake.review_document_rights")
         if entry.scan_state != entry.ScanState.CLEAN or entry.extraction_state != entry.ExtractionState.DONE:
@@ -225,8 +299,20 @@ def review_document(*, document_id, actor, action, rationale, unit=None):
             entry.state = entry.State.REJECTED
             entry.save(update_fields=["state", "updated_at"])
         else:
-            if entry.state != entry.State.PENDING_REVIEW or not entry.unit_id:
-                raise IntakeConflict("Document must have an approved unit mapping")
+            if entry.state == entry.State.RIGHTS_HOLD:
+                raise IntakeConflict(
+                    "Document is on rights hold. Resolve the hold before academic approval."
+                )
+
+            if entry.state != entry.State.PENDING_REVIEW:
+                raise IntakeConflict(
+                    "Document is not ready for academic approval."
+                )
+
+            if not entry.unit_id:
+                raise IntakeConflict(
+                    "Document must have a verified unit mapping."
+                )
             if entry.scan_state != entry.ScanState.CLEAN or entry.extraction_state != entry.ExtractionState.DONE:
                 raise IntakeConflict("Document has not passed file checks")
             if entry.possible_duplicate:

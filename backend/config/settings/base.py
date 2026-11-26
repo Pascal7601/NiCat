@@ -15,6 +15,7 @@ INSTALLED_APPS = [
     "apps.exams", "apps.attempts", "apps.analytics", "apps.common", "apps.study_tutor",
     "apps.study_coach", "apps.beta_guard.apps.BetaGuardConfig","apps.contributions.apps.ContributionsConfig",
     "apps.staff_workspace.apps.StaffWorkspaceConfig", "apps.document_intake.apps.DocumentIntakeConfig",
+    "apps.question_generation.apps.QuestionGenerationConfig",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -166,3 +167,21 @@ NICAT_DOCUMENT_PRIVATE_ROOT = os.environ.get(
 REST_FRAMEWORK.setdefault(
     "DEFAULT_THROTTLE_RATES", {}
 )["document_uploads"] = "6/hour"
+
+
+NICAT_QUESTION_GENERATION_ENABLED = (
+    os.environ.get("NICAT_QUESTION_GENERATION_ENABLED", "false").lower()
+    == "true"
+)
+
+NICAT_QUESTION_AI_PROVIDER = os.environ.get(
+    "NICAT_QUESTION_AI_PROVIDER", "mock"
+).lower()
+
+NICAT_QUESTION_AI_REMOTE_ENABLED = (
+    os.environ.get("NICAT_QUESTION_AI_REMOTE_ENABLED", "false").lower()
+    == "true"
+)
+
+NICAT_QUESTION_AI_MODEL = os.environ.get("NICAT_QUESTION_AI_MODEL", "")
+NICAT_QUESTION_AI_API_KEY = os.environ.get("OPENAI_API_KEY", "")

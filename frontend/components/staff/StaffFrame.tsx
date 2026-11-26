@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FileUp } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import {
@@ -35,6 +36,12 @@ const staffLinks = [
         href: "/staff/questions",
         label: "Question Bank",
         icon: ListChecks,
+        permission: "questions",
+    },
+    {
+        href: "/staff/generate",
+        label: "Generate questions",
+        icon: Sparkles,
         permission: "questions",
     },
     {

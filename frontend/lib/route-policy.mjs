@@ -133,6 +133,19 @@ ALLOWED.POST.push(
     new RegExp(`^/document-intake/staff/${U}/review/$`),
 );
 
+// Sprint 14 — only these staff-authenticated JSON API paths.
+ALLOWED.GET.push(
+    /^\/question-generation\/sources\/$/,
+    /^\/question-generation\/jobs\/$/,
+    new RegExp(`^/question-generation/jobs/${U}/$`),
+);
+ALLOWED.POST.push(
+    /^\/question-generation\/jobs\/$/,
+    new RegExp(`^/question-generation/candidates/${U}/edit/$`),
+    new RegExp(`^/question-generation/candidates/${U}/action/$`),
+    /^\/question-generation\/external-authorizations\/$/,
+);
+
 ALLOWED.POST.push(new RegExp(`^/document-intake/staff/${U}/create-unit/$`));
 
 export function permitted(method, path) {

@@ -13,3 +13,5 @@ if os.environ.get("POSTGRES_HOST"):
         "PORT": os.environ.get("POSTGRES_PORT", "5432")}}
 # SQLite fallback is for quick onboarding. CI runs the same tests on PostgreSQL.
 
+NICAT_CLAMAV_HOST = "127.0.0.1"
+NICAT_CLAMAV_PORT = 3310
