@@ -29,6 +29,12 @@ export function Shell({
             label: "My results",
             icon: ChartNoAxesColumnIncreasing,
         },
+        {
+            id: "documents",
+            href: "/contribute/documents",
+            label: "Contribute documents",
+            icon: BookOpen,
+        },
     ] as const;
     return (
         <div className="app-frame">

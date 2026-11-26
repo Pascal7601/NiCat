@@ -1,0 +1,18 @@
+.stack{display:grid;gap:18px;max-width:1280px}
+.heading{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.heading h2,.heading h3{margin:0}
+.form{display:grid;gap:16px}
+.form label,.stack label{display:grid;gap:7px;font-size:14px;font-weight:600;color:var(--ink,#1d2744)}
+.gridThree{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.pill{font-size:12px;border-radius:999px;padding:5px 10px;background:var(--surface-secondary,#f1f3fb);color:var(--muted,#566180)}
+.error,.success{padding:13px 16px;border-radius:12px;margin:0}
+.error{background:#fff0f0;color:#8f1e1e}
+.success{background:#effbf3;color:#1a6137}
+.jobList{display:grid;gap:8px}
+.jobButton{appearance:none;display:grid;gap:4px;text-align:left;background:var(--surface-secondary,#f5f6fc);border:1px solid var(--border,#dde1eb);border-radius:11px;padding:14px;cursor:pointer;color:inherit;width:100%}
+.jobButton span{font-size:12px;color:var(--muted,#566180)}
+.jobButton:hover{border-color:#6253e7}
+.candidate{border:1px solid var(--border,#e1e4ef);border-radius:12px;padding:17px;margin-bottom:16px}
+.candidate blockquote{border-left:3px solid #6355df;padding:10px 14px;margin:12px 0;background:var(--surface-secondary,#f4f5fb);font-size:13px}
+@media(max-width:760px){.gridThree{grid-template-columns:1fr}.actions button{width:100%}}

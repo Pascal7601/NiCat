@@ -1,0 +1,40 @@
+def extract_text(path, file_type):
+    """Extract bounded text; OCR only after an already-clean malware scan.
+
+    process_one() is the only normal caller. Never call this on unscanned uploads.
+    """
+    if file_type == "txt":
+        raw = path.read_bytes()
+        text = raw.decode("utf-8-sig")
+        pages = 1
+    else:
+        from pypdf import PdfReader
+        reader = PdfReader(str(path), strict=True)
+        if reader.is_encrypted:
+            raise IntakeConflict("Encrypted PDFs require separate review")
+        if len(reader.pages) > 80:
+            raise IntakeConflict("PDF exceeds the 80-page review limit")
+        pages = len(reader.pages)
+        fragments = []
+        remaining = 100_000
+        for page in reader.pages:
+            if remaining <= 0:
+                break
+            extracted = (page.extract_text() or "")[:remaining]
+            fragments.append(extracted)
+            remaining -= len(extracted)
+        text = "\n".join(fragments)
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", text)
+    if len(text.strip()) < 100:
+        if file_type == "pdf" and getattr(settings, "NICAT_DOCUMENT_OCR_ENABLED", False):
+            from .ocr import OCRExtractionError, ocr_pdf
+            try:
+                return ocr_pdf(
+                    path,
+                    tesseract_cmd=getattr(settings, "NICAT_TESSERACT_CMD", "tesseract"),
+                    language=getattr(settings, "NICAT_OCR_LANGUAGE", "eng"),
+                )
+            except OCRExtractionError as exc:
+                raise IntakeConflict(f"OCR extraction failed: {exc}") from exc
+        raise IntakeConflict("Document has too little extractable text; manual review/OCR may be needed")
+    return text[:100_000], pages

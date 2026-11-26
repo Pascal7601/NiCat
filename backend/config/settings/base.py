@@ -13,7 +13,9 @@ INSTALLED_APPS = [
     "rest_framework", "drf_spectacular", "rest_framework_simplejwt.token_blacklist",
     "apps.accounts", "apps.academics", "apps.resources", "apps.questions",
     "apps.exams", "apps.attempts", "apps.analytics", "apps.common", "apps.study_tutor",
-    "apps.study_coach", "apps.beta_guard.apps.BetaGuardConfig",
+    "apps.study_coach", "apps.beta_guard.apps.BetaGuardConfig","apps.contributions.apps.ContributionsConfig",
+    "apps.staff_workspace.apps.StaffWorkspaceConfig", "apps.document_intake.apps.DocumentIntakeConfig",
+    "apps.question_generation.apps.QuestionGenerationConfig", "apps.past_papers.apps.PastPapersConfig",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -69,6 +71,19 @@ REST_FRAMEWORK = {
                                  "rest_framework.throttling.UserRateThrottle"],
     "DEFAULT_THROTTLE_RATES": {"anon": "30/min", "user": "240/min"},
 }
+
+NICAT_CONTRIBUTIONS_ENABLED = (
+    os.environ.get("NICAT_CONTRIBUTIONS_ENABLED", "false").lower() == "true"
+)
+
+NICAT_CONTRIBUTION_DAILY_LIMIT = int(
+    os.environ.get("NICAT_CONTRIBUTION_DAILY_LIMIT", "3")
+)
+
+REST_FRAMEWORK.setdefault("DEFAULT_THROTTLE_RATES", {})[
+    "contribution_submissions"
+] = "6/hour"
+
 SPECTACULAR_SETTINGS = {"TITLE": "NiCat API", "DESCRIPTION": "Independent exam practice platform",
                         "VERSION": "0.3.0", "SERVE_INCLUDE_SCHEMA": False}
 SESSION_COOKIE_HTTPONLY = True
@@ -128,3 +143,47 @@ REST_FRAMEWORK.setdefault("DEFAULT_THROTTLE_RATES", {})["tutor_drafts"] = "8/hou
 NICAT_AI_PROVIDER = os.environ.get(
     "NICAT_AI_PROVIDER", "openai"
 ).lower()
+
+NICAT_STAFF_WORKSPACE_ENABLED = (
+    os.environ.get("NICAT_STAFF_WORKSPACE_ENABLED", "false").lower()
+    == "true"
+)
+
+NICAT_STAFF_ALLOW_MOCK_PUBLICATION_FOR_TESTS = False
+
+NICAT_DOCUMENT_INTAKE_ENABLED = (
+    os.environ.get("NICAT_DOCUMENT_INTAKE_ENABLED", "false").lower()
+    == "true"
+)
+
+NICAT_DOCUMENT_DAILY_LIMIT = 3
+NICAT_DOCUMENT_MAX_BYTES = 8 * 1024 * 1024
+
+NICAT_DOCUMENT_PRIVATE_ROOT = os.environ.get(
+    "NICAT_DOCUMENT_PRIVATE_ROOT",
+    str(BASE_DIR.parent / "private_document_uploads"),
+)
+
+REST_FRAMEWORK.setdefault(
+    "DEFAULT_THROTTLE_RATES", {}
+)["document_uploads"] = "6/hour"
+
+
+NICAT_QUESTION_GENERATION_ENABLED = (
+    os.environ.get("NICAT_QUESTION_GENERATION_ENABLED", "false").lower()
+    == "true"
+)
+
+NICAT_QUESTION_AI_PROVIDER = os.environ.get(
+    "NICAT_QUESTION_AI_PROVIDER", "mock"
+).lower()
+
+NICAT_QUESTION_AI_REMOTE_ENABLED = (
+    os.environ.get("NICAT_QUESTION_AI_REMOTE_ENABLED", "false").lower()
+    == "true"
+)
+
+NICAT_QUESTION_AI_MODEL = os.environ.get("NICAT_QUESTION_AI_MODEL", "")
+NICAT_QUESTION_AI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+
+NICAT_PAST_PAPERS_ENABLED = os.environ.get("NICAT_PAST_PAPERS_ENABLED", "false").lower() in ("1", "true", "yes")
