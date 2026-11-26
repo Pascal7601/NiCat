@@ -176,3 +176,103 @@ def test_missing_unit_rejects_wrong_programme_curriculum(intake):
         assert answer.status_code == 409
         assert Unit.objects.count() == before
         assert DocumentSubmission.objects.get(pk=doc_id).unit_id is None
+
+
+@pytest.mark.django_db
+def test_rights_hold_can_be_released_with_audit_and_two_independent_approvals(intake, monkeypatch):
+    owner, outsider, rights, academic, programme, unit, data, root = intake
+    with override_settings(NICAT_DOCUMENT_INTAKE_ENABLED=True, NICAT_DOCUMENT_PRIVATE_ROOT=root):
+        upload = SimpleUploadedFile('graphics.txt', ('Original educational graphics content. ' * 8).encode())
+        response = as_user(owner).post(URL, {**data, 'file': upload}, format='multipart')
+        assert response.status_code == 201, response.data
+        pk = response.data['id']
+        review_url = f'{URL}staff/{pk}/review/'
+        detail_url = f'{URL}staff/{pk}/'
+        rationale = 'Verified the supplemental ownership evidence and requested review resumption.'
+        monkeypatch.setattr('apps.document_intake.services.scan_with_clamav', lambda p: 'clean')
+        assert process_one(pk) == 'ready'
+
+        # Before rights clearance, the rights reviewer can hold the file.
+        assert 'rights_hold' in as_user(rights).get(detail_url).data['available_actions']
+        held = as_user(rights).post(review_url, {'action': 'rights_hold', 'rationale': rationale}, format='json')
+        assert held.status_code == 200, held.data
+        doc = DocumentSubmission.objects.get(pk=pk)
+        assert doc.state == doc.State.RIGHTS_HOLD
+        assert doc.rights_reviewed_by_id is None
+        assert doc.events.filter(action='rights_hold').count() == 1
+
+        rights_actions = as_user(rights).get(detail_url).data['available_actions']
+        assert 'release_rights_hold' in rights_actions
+        assert 'rights_clear' not in rights_actions
+        assert 'academic_approve' not in as_user(academic).get(detail_url).data['available_actions']
+
+        blocked_approval = as_user(academic).post(review_url, {'action': 'academic_approve', 'rationale': rationale}, format='json')
+        assert blocked_approval.status_code == 409
+        assert 'rights hold' in blocked_approval.data['message']
+        assert as_user(rights).post(review_url, {'action': 'rights_clear', 'rationale': rationale}, format='json').status_code == 409
+        assert as_user(owner).post(review_url, {'action': 'release_rights_hold', 'rationale': rationale}, format='json').status_code == 403
+        assert as_user(academic).post(review_url, {'action': 'release_rights_hold', 'rationale': rationale}, format='json').status_code == 403
+
+        released = as_user(rights).post(review_url, {'action': 'release_rights_hold', 'rationale': rationale}, format='json')
+        assert released.status_code == 200, released.data
+        doc.refresh_from_db()
+        assert doc.state == doc.State.PENDING_REVIEW
+        assert doc.rights_reviewed_by_id is None
+        assert doc.events.filter(action='release_rights_hold', rationale=rationale).count() == 1
+        assert as_user(rights).post(review_url, {'action': 'release_rights_hold', 'rationale': rationale}, format='json').status_code == 409
+        assert as_user(academic).post(review_url, {'action': 'academic_approve', 'rationale': rationale}, format='json').status_code == 409
+
+        cleared = as_user(rights).post(review_url, {'action': 'rights_clear', 'rationale': rationale}, format='json')
+        assert cleared.status_code == 200, cleared.data
+        assert 'rights_hold' not in as_user(rights).get(detail_url).data['available_actions']
+        assert 'academic_approve' in as_user(academic).get(detail_url).data['available_actions']
+        assert 'academic_approve' not in as_user(rights).get(detail_url).data['available_actions']
+        # Grant the rights reviewer the academic permission, too: two-person rule must still prevent self-review.
+        rights.user_permissions.add(Permission.objects.get(content_type__app_label='document_intake', codename='review_document_academic'))
+        rights = get_user_model().objects.get(pk=rights.pk)
+        assert as_user(rights).post(review_url, {'action': 'academic_approve', 'rationale': rationale}, format='json').status_code == 409
+        approved = as_user(academic).post(review_url, {'action': 'academic_approve', 'rationale': rationale}, format='json')
+        assert approved.status_code == 200, approved.data
+        doc.refresh_from_db()
+        assert doc.state == doc.State.APPROVED
+        assert doc.events.filter(action='academic_approve').count() == 1
+        assert as_user(academic).get(detail_url).data['available_actions'] == []
+
+
+@pytest.mark.django_db
+def test_hold_cannot_be_placed_after_rights_clearance(intake, monkeypatch):
+    owner, outsider, rights, academic, programme, unit, data, root = intake
+    with override_settings(NICAT_DOCUMENT_INTAKE_ENABLED=True, NICAT_DOCUMENT_PRIVATE_ROOT=root):
+        upload = SimpleUploadedFile('graphics.txt', ('Original educational graphics content. ' * 8).encode())
+        response = as_user(owner).post(URL, {**data, 'file': upload}, format='multipart')
+        pk = response.data['id']
+        rationale = 'Independently verified the author and license for exam question drafting.'
+        monkeypatch.setattr('apps.document_intake.services.scan_with_clamav', lambda p: 'clean')
+        assert process_one(pk) == 'ready'
+        review_document(document_id=pk, actor=rights, action='rights_clear', rationale=rationale)
+        attempt = as_user(rights).post(f'{URL}staff/{pk}/review/', {
+            'action': 'rights_hold', 'rationale': rationale,
+        }, format='json')
+        assert attempt.status_code == 409
+        doc = DocumentSubmission.objects.get(pk=pk)
+        assert doc.state == doc.State.PENDING_REVIEW
+        assert doc.rights_reviewed_by_id == rights.pk
+
+
+@pytest.mark.django_db
+def test_existing_unit_remap_does_not_bypass_rights_hold(intake, monkeypatch):
+    owner, outsider, rights, academic, programme, unit, data, root = intake
+    with override_settings(NICAT_DOCUMENT_INTAKE_ENABLED=True, NICAT_DOCUMENT_PRIVATE_ROOT=root):
+        upload = SimpleUploadedFile('graphics.txt', ('Original educational graphics content. ' * 8).encode())
+        response = as_user(owner).post(URL, {**data, 'file': upload}, format='multipart')
+        pk = response.data['id']
+        rationale = 'Verified catalogue mapping separately from the pending ownership clarification.'
+        monkeypatch.setattr('apps.document_intake.services.scan_with_clamav', lambda p: 'clean')
+        assert process_one(pk) == 'ready'
+        review_document(document_id=pk, actor=rights, action='rights_hold', rationale=rationale)
+        rights.user_permissions.add(Permission.objects.get(content_type__app_label='document_intake', codename='map_document_units'))
+        rights = get_user_model().objects.get(pk=rights.pk)
+        review_document(document_id=pk, actor=rights, action='map_unit', rationale=rationale, unit=unit)
+        doc = DocumentSubmission.objects.get(pk=pk)
+        assert doc.state == doc.State.RIGHTS_HOLD
+        assert doc.rights_reviewed_by_id is None

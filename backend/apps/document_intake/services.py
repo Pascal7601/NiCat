@@ -164,7 +164,10 @@ def scan_with_clamav(path):
 
 
 def extract_text(path, file_type):
-    """Bounded extraction. In production, execute in an isolated, resource-limited worker."""
+    """Extract bounded text; OCR only after an already-clean malware scan.
+
+    process_one() is the only normal caller. Never call this on unscanned uploads.
+    """
     if file_type == "txt":
         raw = path.read_bytes()
         text = raw.decode("utf-8-sig")
@@ -188,8 +191,19 @@ def extract_text(path, file_type):
         text = "\n".join(fragments)
     text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", text)
     if len(text.strip()) < 100:
+        if file_type == "pdf" and getattr(settings, "NICAT_DOCUMENT_OCR_ENABLED", False):
+            from .ocr import OCRExtractionError, ocr_pdf
+            try:
+                return ocr_pdf(
+                    path,
+                    tesseract_cmd=getattr(settings, "NICAT_TESSERACT_CMD", "tesseract"),
+                    language=getattr(settings, "NICAT_OCR_LANGUAGE", "eng"),
+                )
+            except OCRExtractionError as exc:
+                raise IntakeConflict(f"OCR extraction failed: {exc}") from exc
         raise IntakeConflict("Document has too little extractable text; manual review/OCR may be needed")
     return text[:100_000], pages
+
 
 
 def process_one(document_id):
@@ -240,6 +254,41 @@ def process_one(document_id):
     return "ready"
 
 
+def available_review_actions(entry, actor):
+    """UI hints only: review_document() remains the authorization boundary."""
+    if not (actor.is_authenticated and actor.is_active and actor.is_staff):
+        return []
+    if entry.student_id == actor.pk or entry.state in (
+        entry.State.APPROVED, entry.State.REJECTED, entry.State.WITHDRAWN
+    ):
+        return []
+
+    actions = []
+    if not entry.unit_id and actor.has_perm("document_intake.map_document_units"):
+        actions.append("map_unit")
+
+    checked = (entry.scan_state == entry.ScanState.CLEAN
+               and entry.extraction_state == entry.ExtractionState.DONE)
+    if checked and entry.unit_id and _mapping_exists(entry.programme, entry.unit):
+        if (entry.state == entry.State.RIGHTS_HOLD
+                and not entry.rights_reviewed_by_id
+                and actor.has_perm("document_intake.review_document_rights")):
+            actions.append("release_rights_hold")
+        if entry.state == entry.State.PENDING_REVIEW:
+            if (not entry.rights_reviewed_by_id
+                    and actor.has_perm("document_intake.review_document_rights")):
+                actions.extend(("rights_clear", "rights_hold"))
+            if (entry.rights_reviewed_by_id
+                    and entry.rights_reviewed_by_id != actor.pk
+                    and not entry.possible_duplicate
+                    and actor.has_perm("document_intake.review_document_academic")):
+                actions.append("academic_approve")
+
+    if actor.has_perm("document_intake.review_document_academic"):
+        actions.append("reject")
+    return actions
+
+
 @transaction.atomic
 def review_document(*, document_id, actor, action, rationale, unit=None):
     """One narrow service for staff actions, with independent rights/academic approval."""
@@ -254,27 +303,41 @@ def review_document(*, document_id, actor, action, rationale, unit=None):
         if not unit or not _mapping_exists(entry.programme, unit):
             raise IntakeConflict("Staff must choose a unit already mapped to the selected programme")
         entry.unit = unit
-        if entry.scan_state == entry.ScanState.CLEAN and entry.extraction_state == entry.ExtractionState.DONE:
+        if (
+            entry.scan_state == entry.ScanState.CLEAN
+            and entry.extraction_state == entry.ExtractionState.DONE
+            and entry.state != entry.State.RIGHTS_HOLD
+        ):
             entry.state = entry.State.PENDING_REVIEW
         entry.save(update_fields=["unit", "state", "updated_at"])
     elif action == "release_rights_hold":
         _require_reviewer(actor, "document_intake.review_document_rights")
 
-        if entry.state != entry.State.RIGHTS_HOLD:
-            raise IntakeConflict("Document is not on rights hold")
-
-        if entry.scan_state != entry.ScanState.CLEAN:
-            raise IntakeConflict("Document must pass malware scanning")
-
-        if entry.extraction_state != entry.ExtractionState.DONE:
-            raise IntakeConflict("Document must pass text extraction")
-
-        if not entry.unit_id:
-            raise IntakeConflict("Document must have a verified unit mapping")
-
         if entry.student_id == actor.pk:
             raise IntakeConflict("Uploader cannot release their own rights hold")
 
+        if entry.state != entry.State.RIGHTS_HOLD:
+            raise IntakeConflict("Document is not on rights hold")
+
+        if entry.rights_reviewed_by_id:
+            raise IntakeConflict(
+                "Already cleared rights require separate administrative review"
+            )
+
+        if (
+            entry.scan_state != entry.ScanState.CLEAN
+            or entry.extraction_state != entry.ExtractionState.DONE
+        ):
+            raise IntakeConflict(
+                "Document must pass scanning and text extraction first"
+            )
+
+        if not entry.unit_id or not _mapping_exists(entry.programme, entry.unit):
+            raise IntakeConflict(
+                "Document must have a verified programme unit mapping"
+            )
+
+        # Releasing the hold does not grant rights clearance.
         entry.state = entry.State.PENDING_REVIEW
         entry.save(update_fields=["state", "updated_at"])
 
@@ -282,6 +345,13 @@ def review_document(*, document_id, actor, action, rationale, unit=None):
         _require_reviewer(actor, "document_intake.review_document_rights")
         if entry.scan_state != entry.ScanState.CLEAN or entry.extraction_state != entry.ExtractionState.DONE:
             raise IntakeConflict("Document must pass security scanning and extraction first")
+        if entry.student_id == actor.pk:
+            raise IntakeConflict("Uploader cannot review their own submission")
+
+        if entry.state != entry.State.PENDING_REVIEW or entry.rights_reviewed_by_id:
+            raise IntakeConflict(
+                "Rights review unavailable; resolve any hold before clearing rights"
+            )
         if action == "rights_hold":
             entry.state = entry.State.RIGHTS_HOLD
             entry.save(update_fields=["state", "updated_at"])
@@ -295,23 +365,23 @@ def review_document(*, document_id, actor, action, rationale, unit=None):
             entry.save(update_fields=["rights_reviewed_by", "rights_reviewed_at", "updated_at"])
     elif action in ("academic_approve", "reject"):
         _require_reviewer(actor, "document_intake.review_document_academic")
+        if entry.student_id == actor.pk:
+            raise IntakeConflict("Uploader cannot review their own submission")
         if action == "reject":
             entry.state = entry.State.REJECTED
             entry.save(update_fields=["state", "updated_at"])
         else:
             if entry.state == entry.State.RIGHTS_HOLD:
                 raise IntakeConflict(
-                    "Document is on rights hold. Resolve the hold before academic approval."
+                    "Document is on rights hold. Release the hold and clear rights first"
                 )
 
             if entry.state != entry.State.PENDING_REVIEW:
-                raise IntakeConflict(
-                    "Document is not ready for academic approval."
-                )
+                raise IntakeConflict("Document is not ready for academic approval")
 
-            if not entry.unit_id:
+            if not entry.unit_id or not _mapping_exists(entry.programme, entry.unit):
                 raise IntakeConflict(
-                    "Document must have a verified unit mapping."
+                    "Document must have a verified programme unit mapping"
                 )
             if entry.scan_state != entry.ScanState.CLEAN or entry.extraction_state != entry.ExtractionState.DONE:
                 raise IntakeConflict("Document has not passed file checks")
@@ -394,7 +464,11 @@ def create_and_map_verified_unit(
         raise IntakeConflict("Existing curriculum placement differs; verify it before mapping")
 
     entry.unit = unit
-    if entry.scan_state == entry.ScanState.CLEAN and entry.extraction_state == entry.ExtractionState.DONE:
+    if (
+        entry.scan_state == entry.ScanState.CLEAN
+        and entry.extraction_state == entry.ExtractionState.DONE
+        and entry.state != entry.State.RIGHTS_HOLD
+    ):
         entry.state = entry.State.PENDING_REVIEW
     entry.save(update_fields=["unit", "state", "updated_at"])
     action = "unit_created_and_mapped" if created else "existing_unit_linked_and_mapped"

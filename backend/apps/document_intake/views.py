@@ -14,7 +14,7 @@ from .models import DocumentSubmission
 from .serializers import DocumentSubmitSerializer, StudentDocumentSerializer
 from .services import (
     IntakeConflict, IntakeQuotaExceeded, create_and_map_verified_unit,
-    review_document, submit_document, withdraw_document,
+    available_review_actions, review_document, submit_document, withdraw_document,
 )
 
 
@@ -133,6 +133,7 @@ def staff_detail(request, document_id):
        "state": i.state, "scan_state": i.scan_state, "extraction_state": i.extraction_state,
        "possible_duplicate": i.possible_duplicate, "rights_cleared": bool(i.rights_reviewed_by_id),
        "academic_approved": bool(i.academic_reviewed_by_id),
+       "available_actions": available_review_actions(i, request.user),
        "permit_question_generation": i.permit_question_generation,
        "permit_resource_display": i.permit_resource_display, "permit_tutor_use": i.permit_tutor_use,
        "extracted_preview": i.extracted_text[:5000] if i.scan_state == i.ScanState.CLEAN else "",
@@ -140,7 +141,7 @@ def staff_detail(request, document_id):
 
 
 class ReviewSerializer(serializers.Serializer):
-    action = serializers.ChoiceField(choices=("rights_clear", "rights_hold", "academic_approve", "reject", "map_unit"))
+    action = serializers.ChoiceField(choices=("rights_clear", "rights_hold", "release_rights_hold", "academic_approve", "reject", "map_unit"))
     rationale = serializers.CharField(min_length=25, max_length=2000)
     unit_id = serializers.PrimaryKeyRelatedField(queryset=Unit.objects.all(), source="unit", required=False)
 
